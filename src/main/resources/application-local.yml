@@ -77,10 +77,19 @@ ncp:
 openai:
   api:
     key: "${openai.api.key}"  # 환경 변수에서 OPENAI_API_KEY를 가져옵니다.
+    url: "${openai.api.url}"
     chat:
       options:
         model: gpt-3.5-turbo  # 사용할 AI 모델 (예: gpt-3.5-turbo)
         temperature: 0.7  # 생성되는 텍스트의 다양성 정도를 조절하는 파라미터 (0.0 ~ 1.0)
+
+clova:
+  api:
+    key: "${clova.api.key}"
+    url: "${clova.api.url}"
+    rid: "${clova.api.rid}"
+
+
 
 management:
   server:

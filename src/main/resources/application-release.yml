@@ -73,6 +73,7 @@ ncp:
 openai:
   api:
     key: "${openai_api_key}"  # 환경 변수에서 OPENAI_API_KEY를 가져옵니다.
+    url: "${openai.api.url}"
     chat:
       options:
         model: gpt-3.5-turbo  # 사용할 AI 모델 (예: gpt-3.5-turbo)

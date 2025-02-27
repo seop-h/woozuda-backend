@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "ai_diary_rep")
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class AiDiary extends BaseTimeEntity{
