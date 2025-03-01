@@ -1,109 +1,17 @@
 spring:
-  application:
-    name: backend
-
-  config:
-    import: "classpath:./config/local-var.yml"
-
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: "${database.url}"
-    username: "${database.username}"
-    password: "${database.password}"
-
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         show_sql: true
         format_sql: true
 
-  jwt:
-    secret: "${jwt.hashcode}"
-
-  security:
-    oauth2:
-      client:
-        registration:
-          naver:
-            client-name: naver
-            client-id: "${oauth2.naver.id}"
-            client-secret: "${oauth2.naver.secret}"
-            redirect-uri: http://localhost:8080/login/oauth2/code/naver
-            authorization-grant-type: authorization_code
-            scope: name, email
-          google:
-            client-name: google
-            client-id: "${oauth2.google.id}"
-            client-secret: "${oauth2.google.secret}"
-            redirect-uri: http://localhost:8080/login/oauth2/code/google
-            authorization-grant-type: authorization_code
-            scope: profile, email
-          kakao:
-            client-name: kakao
-            client-id: "${oauth2.kakao.id}"
-            client-secret: "${oauth2.kakao.secret}"
-            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
-            authorization-grant-type: authorization_code
-            scope: profile_nickname, account_email
-            client-authentication-method: client_secret_post
-        provider:
-          naver:
-            authorization-uri: https://nid.naver.com/oauth2.0/authorize
-            token-uri: https://nid.naver.com/oauth2.0/token
-            user-info-uri: https://openapi.naver.com/v1/nid/me
-            user-name-attribute: response
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
-
-ncp:
-  storage:
-    region: kr-standard
-    endpoint: https://kr.object.ncloudstorage.com
-    accessKey: "${object-storage.accessKey}"
-    secretKey: "${object-storage.secretKey}"
-    bucketName : "${object-storage.bucketName}"
-  clova-studio:
-    question-creator:
-      url: "${questionCreator.url}"
-      api-key: "${questionCreator.apiKey}"
-      apigw-key: "${questionCreator.apigwKey}"
-
-openai:
-  api:
-    key: "${openai.api.key}"  # 환경 변수에서 OPENAI_API_KEY를 가져옵니다.
-    url: "${openai.api.url}"
-    chat:
-      options:
-        model: gpt-3.5-turbo  # 사용할 AI 모델 (예: gpt-3.5-turbo)
-        temperature: 0.7  # 생성되는 텍스트의 다양성 정도를 조절하는 파라미터 (0.0 ~ 1.0)
-
-clova:
-  api:
-    key: "${clova.api.key}"
-    url: "${clova.api.url}"
-    rid: "${clova.api.rid}"
-
-
-
-management:
-  server:
-    port: "${actuator.port}"
-  endpoints:
-    web:
-      exposure:
-        include: prometheus
-  endpoint:
-    prometheus:
-      enabled: true #default
-
-allow-ips: "${allow_ips}"
-
-aes:
-  password: "${aes-password}"
+# 로깅 레벨 설정
+# 캐시의 조회, 저장, 삭제와 같은 작업에 대한 모든 세부 정보가 로그로 기록됨
+# 해당 설정은 org.springframework.cache 패키지에만 적용
+logging:
+  level:
+    org.springframework.cache: trace
 

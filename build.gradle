@@ -97,6 +97,10 @@ dependencies {
 
 	// html 파싱을 위한 jsoup
 	implementation 'org.jsoup:jsoup:1.16.1'
+
+	//AWS Parameter Store
+	implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.2.1")
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
 }
 
 tasks.named('test') {
