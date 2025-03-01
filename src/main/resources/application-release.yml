@@ -1,6 +1,6 @@
 spring:
   config:
-    import: aws-parameterstore:/woozuda/parameter_release
+    import: aws-parameterstore:/woozuda/parameter_release/
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
