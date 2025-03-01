@@ -8,29 +8,27 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
 
 @Getter
 @Configuration
 public class S3Client {
-    @Value("${ncp.storage.accessKey}")
+    @Value("${cloud.aws.s3.access-key}")
     private String accessKey;
 
-    @Value("${ncp.storage.secretKey}")
+    @Value("${cloud.aws.s3.secret-key}")
     private String secretKey;
 
-    @Value("${ncp.storage.endpoint}")
-    private String endPoint;
-
-    @Value("${ncp.storage.region}")
+    @Value("${cloud.aws.region.static}")
     private String region;
 
-    @Value("${ncp.storage.bucketName}")
+    @Value("${cloud.aws.s3.bucket-name}")
     private String bucketName;
 
     public AmazonS3 getAmazonS3() {
         return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endPoint, region))
                 .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+                .withRegion(region)
                 .build();
     }
 }
