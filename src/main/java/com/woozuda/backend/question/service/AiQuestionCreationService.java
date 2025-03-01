@@ -18,14 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AiQuestionCreationService {
 
+    private static final String AUTHORIZATION_PREFIX = "Bearer ";
+
     private final QuestionRepository questionRepository;
     private final AiQuestionCreatorApiClient apiClient;
 
-    @Value("${ncp.clova-studio.question-creator.api-key}")
+    @Value("${cloud.ncp.clova-studio.question-creator.api-key}")
     private String apiKey;
 
-    @Value("${ncp.clova-studio.question-creator.apigw-key}")
-    private String apigwKey;
+    @Value("${cloud.ncp.clova-studio.question-creator.request-id}")
+    private String requestId;
 
     // 매일 자정 12시 00분 1초에 새로운 질문 생성
     @Scheduled(cron = "1 0 0 * * *")
@@ -35,8 +37,8 @@ public class AiQuestionCreationService {
 
         //AI 질문 생성기 API 호출
         AiQuestionResponseDto responseDto = apiClient.makeAiQuestion(
-                apiKey,
-                apigwKey,
+                AUTHORIZATION_PREFIX + apiKey,
+                requestId,
                 requestDto
         );
 
