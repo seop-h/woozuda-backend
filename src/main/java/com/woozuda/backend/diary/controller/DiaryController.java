@@ -42,6 +42,7 @@ public class DiaryController {
             @AuthenticationPrincipal CustomUser user
     ) {
         log.info("[CI/CD 테스트]");
+        log.info("다 맞게 한 거 같은데...");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
