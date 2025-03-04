@@ -43,6 +43,7 @@ public class DiaryController {
     ) {
         log.info("[CI/CD 테스트]");
         log.info("다 맞게 한 거 같은데...");
+        log.info("이젠 진짜 돼라ㅜㅜ");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);

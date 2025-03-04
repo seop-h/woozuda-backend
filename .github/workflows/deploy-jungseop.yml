@@ -72,6 +72,7 @@ jobs:
           host: ${{ secrets.SPRINGBOOT_SERVER_IP }}
           username: ${{ secrets.SPRINGBOOT_SERVER_USERNAME }}
           key: ${{ secrets.SPRINGBOOT_SERVER_KEY }}
+          envs: DOCKER_HUB_USERNAME, IMAGE, IMAGE_TAG
           script: |
             echo "Pulling Image: ..${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}.."
             sudo docker pull ${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}
