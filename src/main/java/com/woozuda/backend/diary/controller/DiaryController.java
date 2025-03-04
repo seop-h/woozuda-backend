@@ -10,6 +10,7 @@ import com.woozuda.backend.diary.dto.response.DiaryNameResponseDto;
 import com.woozuda.backend.diary.service.DiaryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/diary")
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryController {
 
     private final DiaryService diaryService;
@@ -39,6 +41,7 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponseDto> getDiaryList(
             @AuthenticationPrincipal CustomUser user
     ) {
+        log.info("[CI/CD 테스트]");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
