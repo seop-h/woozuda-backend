@@ -73,6 +73,7 @@ jobs:
           username: ${{ secrets.SPRINGBOOT_SERVER_USERNAME }}
           key: ${{ secrets.SPRINGBOOT_SERVER_KEY }}
           script: |
+            echo "Pulling Image: ..${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}.."
             sudo docker pull ${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}
             cd docker-compose
             sudo docker compose down
