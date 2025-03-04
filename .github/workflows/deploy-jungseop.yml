@@ -1,0 +1,80 @@
+name: Deploy to Test Environment
+
+on:
+  push:
+    branches:
+      - jungseop
+
+env:
+  IMAGE_TAG: latest
+
+jobs:
+  # 1. Springboot 애플리케이션을 빌드하여 Docker Hub에 푸시
+  build-docker-image:
+    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1-1. 소스코드 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1-2. Java 환경 설정
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # 1-3. Gradle 환경 설정
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 1-4. Spring Boot 애플리케이션 빌드
+      - name: Build Spring Boot Application
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+        shell: bash
+
+      # 1-5. Docker Hub 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_EMAIL }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      # 1-6. Docker Image 빌드
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE }}:${{ env.IMAGE_TAG }} .
+
+      # 1-7. Docker Image 푸시
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE }}:${{ env.IMAGE_TAG }}
+
+  # TODO 지금은 필요한 모든 인스턴스를 모두 수동으로 사작하고 있지만, 이것도 self-hosted runner에서 aws cli를 통해 실행시킬 수 있도록 job 추가
+
+  # 2. 빌드한 Springboot 애플리케이션 이미지를 실행
+  run-docker-image:
+    needs: build-docker-image # 위 과정을 완료한 후 실행
+    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+    runs-on: [self-hosted, linux, x64, woozuda]
+
+    steps:
+      # 1. Springboot App 서버에 접근. Docker Compose 실행
+      - name: Restart Docker Compose in Springboot Application Server
+        uses: appleboy/ssh-action@v1.2.1
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          IMAGE: ${{ secrets.IMAGE }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        with:
+          host: ${{ secrets.SPRINGBOOT_SERVER_IP }}
+          username: ${{ secrets.SPRINGBOOT_SERVER_USERNAME }}
+          key: ${{ secrets.SPRINGBOOT_SERVER_KEY }}
+          script: |
+            sudo docker pull ${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}
+            cd docker-compose
+            sudo docker compose down
+            sudo docker compose up -d
+            sudo docker image prune -f
