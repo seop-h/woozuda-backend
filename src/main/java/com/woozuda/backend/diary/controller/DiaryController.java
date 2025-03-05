@@ -43,6 +43,7 @@ public class DiaryController {
     ) {
         log.info("모든 필요한 aws 리소스 시작");
         log.info("또 권한 문제ㅜㅜ");
+        log.info("찐막");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
