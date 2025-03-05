@@ -99,7 +99,7 @@ jobs:
 
   # 3. 빌드한 Springboot 애플리케이션 이미지를 실행
   run-docker-image:
-    needs: [build-docker-image, start-actions-runner]  # 위 두 개의 과정을 모두 완료한 후 실행
+    needs: [build-docker-image, start-aws-resources]  # 위 두 개의 과정을 모두 완료한 후 실행
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: [self-hosted, linux, x64, woozuda]
 
