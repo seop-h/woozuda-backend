@@ -42,6 +42,7 @@ public class DiaryController {
             @AuthenticationPrincipal CustomUser user
     ) {
         log.info("모든 필요한 aws 리소스 시작");
+        log.info("또 권한 문제ㅜㅜ");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
