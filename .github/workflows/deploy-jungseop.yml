@@ -54,12 +54,10 @@ jobs:
 
   # TODO 지금은 필요한 모든 인스턴스를 모두 수동으로 사작하고 있지만, 이것도 self-hosted runner에서 aws cli를 통해 실행시킬 수 있도록 job 추가
 
-  # 2. Self-hosted Runner 실행
-  start-actions-runner:
+  # 2. 필요한 모든 AWS 리소스 실행
+  start-aws-resources:
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
-    outputs:
-      runner_id: ${{ steps.instance.outputs.runner_id }}  # RUNNER_ID를 outputs로 설정
 
     steps:
       # 2-1. AWS CLI 자격 증명
@@ -70,25 +68,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      # 2-2. Runner 서버의 실행 상태 체크
-      - name: Check Runner Server Status
+      # 2-2. EC2 인스턴스 실행 (Runner 서버 포함)
+      - name: Start EC2 Instances
         id: instance
         run: |
-          RUNNER_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${{ vars.ACTIONS_RUNNER_NAME_TAG }}" --query 'Reservations[0].Instances[0].InstanceId' --output text)
-          RUNNER_STATUS=$(aws ec2 describe-instances --instance-ids $RUNNER_ID --query 'Reservations[0].Instances[0].State.Name' --output text)
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+          --filters "Name=tag:${{ vars.TYPE_TAG_NAME }},Values=${{ vars.TYPE_TAG_VALUE }}" "Name=instance-state-name,Values=stopped" \
+          --query "Reservations[*].Instances[*].InstanceId" --output text)
+          echo "Found Instance Ids stopped: $INSTANCE_IDS"
           
-          echo "RUNNER_ID=$RUNNER_ID"
-          echo "RUNNER_STATUS=$RUNNER_STATUS"
-          
-          echo "runner_id=$RUNNER_ID" >> $GITHUB_OUTPUT
-          echo "runner_status=$RUNNER_STATUS" >> $GITHUB_OUTPUT
+          aws ec2 start-instances --instance-ids $INSTANCE_IDS
+          aws ec2 wait instance-running --instance-ids $INSTANCE_IDS
 
-      # 2-3. Runner 서버 실행
-      - name: Start Runner Server if Stopped
-        if: steps.instance.outputs.runner_status != 'running'
+      # 2-3. RDS 인스턴스의 상태 체크
+      - name: Check RDS Instance Status
+        id: rds
         run: |
-          aws ec2 start-instances --instance-ids ${{ steps.instance.outputs.runner_id }}
-          aws ec2 wait instance-running --instance-ids ${{ steps.instance.outputs.runner_id }}
+          RDS_INSTANCE_STATUS=$(aws rds describe-db-instances \
+          --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }} \
+          --query "DBInstances[0].DBInstanceStatus" --output text)
+          
+          echo "rds_instance_satus=$RDS_INSTANCE_STATUS" >> $GITHUB_OUTPUT
+
+      # 2-4. RDS 인스턴스 실행
+      - name: Start RDS Instance if Stopped
+        if: steps.rds.outputs.rds_instance_satus != 'available'
+        run: |
+          aws rds start-db-instance --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
+          aws rds wait db-instance-available --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
 
   # 3. 빌드한 Springboot 애플리케이션 이미지를 실행
   run-docker-image:
@@ -118,7 +125,7 @@ jobs:
 
   # 4. Self-hosted Runner 중지
   stop-actions-runner:
-    needs: [run-docker-image, start-actions-runner]
+    needs: run-docker-image
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
 
@@ -131,6 +138,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      # 4-2. Runner 서버 중지
       - name: Stop Runner Server
-        run: aws ec2 stop-instances --instance-ids ${{ needs.start-actions-runner.outputs.runner_id }}
+        run: |
+          RUNNER_ID=$(aws ec2 describe-instances \
+          --filters "Name=tag:${{ vars.NAME_TAG }},Values=${{ vars.ACTIONS_RUNNER_NAME_TAG_VALUE }}" \
+          --query 'Reservations[0].Instances[0].InstanceId' --output text)
+          aws ec2 stop-instances --instance-ids $RUNNER_ID
 
