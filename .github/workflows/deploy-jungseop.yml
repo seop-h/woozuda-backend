@@ -73,7 +73,7 @@ jobs:
         id: instance
         run: |
           INSTANCE_IDS=$(aws ec2 describe-instances \
-          --filters "Name=tag:${{ vars.TYPE_TAG_NAME }},Values=${{ vars.TYPE_TAG_VALUE }}" "Name=instance-state-name,Values=stopped" \
+          --filters "Name=tag:${{ vars.TYPE_TAG }},Values=${{ vars.TYPE_TAG_VALUE }}" "Name=instance-state-name,Values=stopped" \
           --query "Reservations[*].Instances[*].InstanceId" --output text)
           echo "Found Instance Ids stopped: $INSTANCE_IDS"
           
