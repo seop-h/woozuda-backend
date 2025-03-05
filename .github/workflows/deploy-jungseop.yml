@@ -73,7 +73,10 @@ jobs:
         id: instance
         run: |
           RUNNER_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${{ vars.ACTIONS_RUNNER_NAME_TAG }}" --query 'Reservations[0].Instances[0].InstanceId' --output text)
-          RUNNER_STATUS=$(aws ec2 describe-instances --instance-ids $ACTIONS_RUNNER_ID --query 'Reservations[0].Instances[0].State.Name' --output text)
+          RUNNER_STATUS=$(aws ec2 describe-instances --instance-ids $RUNNER_ID --query 'Reservations[0].Instances[0].State.Name' --output text)
+          
+          echo "RUNNER_ID=$RUNNER_ID"
+          echo "RUNNER_STATUS=$RUNNER_STATUS"
           
           echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
           echo "runner_status=$RUNNER_STATUS" >> $GITHUB_OUTPUT
