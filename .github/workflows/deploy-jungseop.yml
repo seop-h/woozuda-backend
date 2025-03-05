@@ -58,6 +58,8 @@ jobs:
   start-actions-runner:
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
+    outputs:
+      runner_id: ${{ steps.instance.outputs.runner_id }}  # RUNNER_ID를 outputs로 설정
 
     steps:
       # 2-1. AWS CLI 자격 증명
@@ -78,15 +80,15 @@ jobs:
           echo "RUNNER_ID=$RUNNER_ID"
           echo "RUNNER_STATUS=$RUNNER_STATUS"
           
-          echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
+          echo "runner_id=$RUNNER_ID" >> $GITHUB_OUTPUT
           echo "runner_status=$RUNNER_STATUS" >> $GITHUB_OUTPUT
 
       # 2-3. Runner 서버 실행
       - name: Start Runner Server if Stopped
         if: steps.instance.outputs.runner_status != 'running'
         run: |
-          aws ec2 start-instances --instance-ids $RUNNER_ID
-          aws ec2 wait instance-running --instance-ids $RUNNER_ID
+          aws ec2 start-instances --instance-ids ${{ steps.instance.outputs.runner_id }}
+          aws ec2 wait instance-running --instance-ids ${{ steps.instance.outputs.runner_id }}
 
   # 3. 빌드한 Springboot 애플리케이션 이미지를 실행
   run-docker-image:
@@ -116,7 +118,7 @@ jobs:
 
   # 4. Self-hosted Runner 중지
   stop-actions-runner:
-    needs: run-docker-image
+    needs: [run-docker-image, start-actions-runner]
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
 
@@ -130,5 +132,5 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Stop Runner Server
-        run: aws ec2 stop-instances --instance-ids $RUNNER_ID
+        run: aws ec2 stop-instances --instance-ids ${{ needs.start-actions-runner.outputs.runner_id }}
 
