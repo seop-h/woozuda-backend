@@ -43,6 +43,7 @@ public class DiaryController {
     ) {
         log.info("self-hosted runner 자동 시작 및 중지");
         log.info("권한 주기 어렵네");
+        log.info("이젠 진짜 돼라");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
