@@ -69,16 +69,22 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       # 2-2. EC2 인스턴스 실행 (Runner 서버 포함)
-      - name: Start EC2 Instances
-        id: instance
+      - name: Get Stopped EC2 Instances IDs
+        id: ec2
         run: |
           INSTANCE_IDS=$(aws ec2 describe-instances \
           --filters "Name=tag:${{ vars.TYPE_TAG }},Values=${{ vars.TYPE_TAG_VALUE }}" "Name=instance-state-name,Values=stopped" \
-          --query "Reservations[*].Instances[*].InstanceId" --output text)
-          echo "Found Instance Ids stopped: $INSTANCE_IDS"
+          --query "Reservations[*].Instances[*].InstanceId" --output text | tr '\n' ' ')
+          echo "Found Instance Ids stopped: ..$INSTANCE_IDS.."
           
-          aws ec2 start-instances --instance-ids $INSTANCE_IDS
-          aws ec2 wait instance-running --instance-ids $INSTANCE_IDS
+          echo "instance_ids=$INSTANCE_IDS" >> $GITHUB_OUTPUT
+
+      # 2-3. EC2 인스턴스 실행
+      - name: Start EC2 Instances if Stopped
+        if: steps.ec2.outputs.instance_ids != '' && steps.ec2.outputs.instance_ids != null
+        run: | 
+          aws ec2 start-instances --instance-ids ${{steps.ec2.outputs.instance_ids}}
+          aws ec2 wait instance-running --instance-ids ${{steps.ec2.outputs.instance_ids}}
 
       # 2-3. RDS 인스턴스의 상태 체크
       - name: Check RDS Instance Status
