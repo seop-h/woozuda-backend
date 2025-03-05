@@ -41,9 +41,7 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponseDto> getDiaryList(
             @AuthenticationPrincipal CustomUser user
     ) {
-        log.info("[CI/CD 테스트]");
-        log.info("다 맞게 한 거 같은데...");
-        log.info("이젠 진짜 돼라ㅜㅜ");
+        log.info("self-hosted runner 자동 시작 및 중지");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
