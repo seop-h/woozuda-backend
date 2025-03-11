@@ -68,7 +68,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      # 2-2. EC2 인스턴스 실행 (Runner 서버 포함)
+      # 2-2. 중지 상태인 EC2 인스턴스의 ID 조회
       - name: Get Stopped EC2 Instances IDs
         id: ec2
         run: |
@@ -79,14 +79,14 @@ jobs:
           
           echo "instance_ids=$INSTANCE_IDS" >> $GITHUB_OUTPUT
 
-      # 2-3. EC2 인스턴스 실행
+      # 2-3. EC2 인스턴스 실행 (Runner 서버 포함)
       - name: Start EC2 Instances if Stopped
         if: steps.ec2.outputs.instance_ids != '' && steps.ec2.outputs.instance_ids != null
         run: | 
           aws ec2 start-instances --instance-ids ${{steps.ec2.outputs.instance_ids}}
           aws ec2 wait instance-running --instance-ids ${{steps.ec2.outputs.instance_ids}}
 
-      # 2-3. RDS 인스턴스의 상태 체크
+      # 2-4. RDS 인스턴스의 상태 체크
       - name: Check RDS Instance Status
         id: rds
         run: |
@@ -96,7 +96,7 @@ jobs:
           
           echo "rds_instance_satus=$RDS_INSTANCE_STATUS" >> $GITHUB_OUTPUT
 
-      # 2-4. RDS 인스턴스 실행
+      # 2-5. RDS 인스턴스 실행
       - name: Start RDS Instance if Stopped
         if: steps.rds.outputs.rds_instance_satus != 'available'
         run: |
