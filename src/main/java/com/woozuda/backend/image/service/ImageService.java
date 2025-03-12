@@ -42,31 +42,39 @@ public class ImageService {
 
         // 올릴 이미지가 첨부되지 않았을 경우
         if (multipartFile == null || multipartFile.isEmpty()) {
+            log.info("Not Exist multipartFile");
             return null;
         }
 
         AmazonS3 s3 = s3Client.getAmazonS3();
 
         // 파일 이름 추출
+        log.info("create file name");
         String filename = multipartFile.getOriginalFilename();
         String uuid = UUID.randomUUID().toString();
         filename = uuid + "_" +filename;
 
+
         String bucketname = s3Client.getBucketName();
 
         // 메타데이터 생성
+        log.info("create meta data");
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(multipartFile.getSize());
         metadata.setContentType(multipartFile.getContentType());
 
         // object storage 에 그림 올리기
+        log.info("upload to s3");
         System.out.println(bucketname);
         s3.putObject(bucketname, filename, multipartFile.getInputStream(), metadata);
 
         // 올린 파일에 read 권한을 모든 유저에게 준다
+        /*
+        log.info("authorize read-only to all user");
         AccessControlList accessControlList = s3Client.getAmazonS3().getObjectAcl(bucketname, filename);
         accessControlList.grantPermission(GroupGrantee.AllUsers, Permission.Read);
         s3Client.getAmazonS3().setObjectAcl(bucketname, filename, accessControlList);
+        */
 
         String imgUrl = s3Client.getAmazonS3().getUrl(bucketname, filename).toString();
 
