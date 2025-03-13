@@ -30,7 +30,7 @@ public class AiQuestionCreationService {
     private String requestId;
 
     // 매일 자정 12시 00분 1초에 새로운 질문 생성
-    @Scheduled(cron = "1 0 0 * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void makeTodayAiQuestion() {
         AiQuestionRequestDto requestDto = AiQuestionRequestDto.of(AiInputGenerator.execute());
         log.info("[AI Question Creator] input={}", requestDto.getText());
