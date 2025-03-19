@@ -24,10 +24,12 @@ services:
       - "9080:9080"
     environment:
       HOST_LOG_PATH_PREFIX: ${HOST_LOG_PATH_PREFIX}
+      LOKI_DOMAIN: ${LOKI_DOMAIN}
     volumes:
       - ${HOST_LOG_PATH_PREFIX}:${HOST_LOG_PATH_PREFIX}
-      - ./promtail-config.yml:/etc/promtail/config.yml
-    command: ["-config.file=/etc/promtail/config.yml"]
+      - ./promtail-config.yml.template.template:/etc/promtail/config.yml.template
+      - ./entrypoint.sh:/entrypoint.sh
+    command: ["/entrypoint.sh"]
     networks:
       - backend
 
