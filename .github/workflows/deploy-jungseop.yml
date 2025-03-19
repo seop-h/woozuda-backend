@@ -66,7 +66,6 @@ jobs:
           touch deploy.sh
           echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
           echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
-          echo "cd docker-compose" >> deploy.sh
           echo "sudo docker compose down" >> deploy.sh
           echo "sudo docker compose up -d" >> deploy.sh
           echo "sudo docker image prune -f" >> deploy.sh

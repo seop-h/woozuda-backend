@@ -41,7 +41,7 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponseDto> getDiaryList(
             @AuthenticationPrincipal CustomUser user
     ) {
-        log.info("CodeDeploy 적용: v1.2");
+        log.info("CodeDeploy 적용: v1.3");
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
         return ResponseEntity.ok(responseDto);
