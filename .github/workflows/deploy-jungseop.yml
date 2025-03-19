@@ -78,7 +78,7 @@ jobs:
           cp configurations/appspec.yml appspec.yml
           cp configurations/docker-compose.yml docker-compose.yml
           
-          zip -r deploy.zip deploy.sh appspec.yml docker-compose.yml
+          zip -r deploy.zip .env deploy.sh appspec.yml docker-compose.yml 
 
       # 1-9. S3에 업로드
       - name: Upload to S3
