@@ -63,14 +63,22 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
+          touch .env
+          echo "ECR_IMAGE=${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> .env
+          echo "LOG_PATH_PREFIX=${{ secrets.LOG_PATH_PREFIX }}" >> .env
+          echo "HOST_LOG_PATH_PREFIX=${{ secrets.HOST_LOG_PATH_PREFIX }}" >> .env
+          
           touch deploy.sh
           echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
           echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
           echo "sudo docker compose down" >> deploy.sh
-          echo "sudo docker compose up -d" >> deploy.sh
+          echo "sudo docker compose --env-file .env up -d" >> deploy.sh
           echo "sudo docker image prune -f" >> deploy.sh
-          cp script/appspec.yml appspec.yml
-          zip -r deploy.zip deploy.sh appspec.yml
+          
+          cp configurations/appspec.yml appspec.yml
+          cp configurations/docker-compose.yml docker-compose.yml
+          
+          zip -r deploy.zip deploy.sh appspec.yml docker-compose.yml
 
       # 1-9. S3에 업로드
       - name: Upload to S3
