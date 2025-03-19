@@ -30,3 +30,7 @@ services:
     command: ["-config.file=/etc/promtail/config.yml"]
     networks:
       - backend
+
+networks:
+  backend:
+    driver: bridge
