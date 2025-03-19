@@ -9,8 +9,8 @@ env:
   IMAGE_TAG: latest
 
 jobs:
-  # 1. Springboot 애플리케이션을 빌드하여 Docker Hub에 푸시
-  build-docker-image:
+  # 1. ECR에 도커 이미지 푸시 | S3에 배포 스크립트 및 CodeDeploy appspec.yml 업로드
+  upload-files:
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
 
@@ -37,20 +37,45 @@ jobs:
           ./gradlew clean build -x test
         shell: bash
 
-      # 1-5. Docker Hub 로그인
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      # 1-5. AWS CLI 자격 증명
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKER_HUB_EMAIL }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          aws-access-key-id: ${{ secrets.UPLOAD_FILES_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.UPLOAD_FILES_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      # 1-6. Docker Image 빌드
-      - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE }}:${{ env.IMAGE_TAG }} .
+      # 1-6. ECR 로그인
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # 1-7. Docker Image 푸시
-      - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.IMAGE }}:${{ env.IMAGE_TAG }}
+      # 1-7. Docker Image 빌드 및 푸시
+      - name: Build and Push Docker Image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t ${REGISTRY}/${{ secrets.ECR_REPOSITORY}}:${{ env.IMAGE_TAG }} .
+          docker push ${REGISTRY}/${{ secrets.ECR_REPOSITORY}}:${{ env.IMAGE_TAG }}
+
+      # 1-8. deploy.sh와 appspec.yml 의 압축 파일 생성
+      - name: Prepare Deployment Package
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          touch deploy.sh
+          echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
+          echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
+          echo "cd docker-compose" >> deploy.sh
+          echo "sudo docker compose down" >> deploy.sh
+          echo "sudo docker compose up -d" >> deploy.sh
+          echo "sudo docker image prune -f" >> deploy.sh
+          cp script/appspec.yml appspec.yml
+          zip -r deploy.zip deploy.sh appspec.yml
+
+      # 1-9. S3에 업로드
+      - name: Upload to S3
+        run: aws s3 cp --region ${{vars.AWS_REGION}} ./deploy.zip s3://${{ secrets.DEPLOY_BUCKET_NAME }}
 
   # TODO 지금은 필요한 모든 인스턴스를 모두 수동으로 사작하고 있지만, 이것도 self-hosted runner에서 aws cli를 통해 실행시킬 수 있도록 job 추가
 
@@ -64,8 +89,8 @@ jobs:
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.START_AWS_RESOURCES_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.START_AWS_RESOURCES_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
       # 2-2. 중지 상태인 EC2 인스턴스의 ID 조회
@@ -79,7 +104,7 @@ jobs:
           
           echo "instance_ids=$INSTANCE_IDS" >> $GITHUB_OUTPUT
 
-      # 2-3. EC2 인스턴스 실행 (Runner 서버 포함)
+      # 2-3. EC2 인스턴스 실행
       - name: Start EC2 Instances if Stopped
         if: steps.ec2.outputs.instance_ids != '' && steps.ec2.outputs.instance_ids != null
         run: | 
@@ -103,52 +128,76 @@ jobs:
           aws rds start-db-instance --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
           aws rds wait db-instance-available --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
 
-  # 3. 빌드한 Springboot 애플리케이션 이미지를 실행
-  run-docker-image:
+  # 3. CodeDeploy 실행
+  run-code-deploy:
     needs: [build-docker-image, start-aws-resources]  # 위 두 개의 과정을 모두 완료한 후 실행
-    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
-    runs-on: [self-hosted, linux, x64, woozuda-runner]
-
-    steps:
-      # 3-1. Springboot App 서버에 접근. Docker Compose 실행
-      - name: Restart Docker Compose in Springboot Application Server
-        uses: appleboy/ssh-action@v1.2.1
-        env:
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-          IMAGE: ${{ secrets.IMAGE }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        with:
-          host: ${{ secrets.SPRINGBOOT_SERVER_IP }}
-          username: ${{ secrets.SPRINGBOOT_SERVER_USERNAME }}
-          key: ${{ secrets.SPRINGBOOT_SERVER_KEY }}
-          envs: DOCKER_HUB_USERNAME, IMAGE, IMAGE_TAG
-          script: |
-            sudo docker pull ${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}
-            cd docker-compose
-            sudo docker compose down
-            sudo docker compose up -d
-            sudo docker image prune -f
-
-  # 4. Self-hosted Runner 중지
-  stop-actions-runner:
-    needs: run-docker-image
     if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
     runs-on: ubuntu-latest
 
     steps:
-      # 4-1. AWS CLI 자격 증명
+      # 3-1. AWS CLI 자격 증명
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.RUN_CODE_DEPLOY_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.RUN_CODE_DEPLOY_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      # 4-2. Runner 서버 중지
-      - name: Stop Runner Server
+      # 3-2. CodeDeploy 실행
+      - name: Run CodeDeploy
         run: |
-          RUNNER_ID=$(aws ec2 describe-instances \
-          --filters "Name=tag:${{ vars.NAME_TAG }},Values=${{ vars.ACTIONS_RUNNER_NAME_TAG_VALUE }}" \
-          --query 'Reservations[0].Instances[0].InstanceId' --output text)
-          aws ec2 stop-instances --instance-ids $RUNNER_ID
+          aws deploy create-deployment \
+          --application-name deploy-woozuda \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name deploy-woozuda-group \
+          --s3-location bucket=${{ secrets.DEPLOY_BUCKET_NAME }},bundleType=zip,key=deploy.zip
+
+#  # 3. 빌드한 Springboot 애플리케이션 이미지를 실행
+#  run-docker-image:
+#    needs: [build-docker-image, start-aws-resources]  # 위 두 개의 과정을 모두 완료한 후 실행
+#    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+#    runs-on: [self-hosted, linux, x64, woozuda-runner]
+#
+#    steps:
+#      # 3-1. Springboot App 서버에 접근. Docker Compose 실행
+#      - name: Restart Docker Compose in Springboot Application Server
+#        uses: appleboy/ssh-action@v1.2.1
+#        env:
+#          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          IMAGE: ${{ secrets.IMAGE }}
+#          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+#        with:
+#          host: ${{ secrets.SPRINGBOOT_SERVER_IP }}
+#          username: ${{ secrets.SPRINGBOOT_SERVER_USERNAME }}
+#          key: ${{ secrets.SPRINGBOOT_SERVER_KEY }}
+#          envs: DOCKER_HUB_USERNAME, IMAGE, IMAGE_TAG
+#          script: |
+#            sudo docker pull ${DOCKER_HUB_USERNAME}/${IMAGE}:${IMAGE_TAG}
+#            cd docker-compose
+#            sudo docker compose down
+#            sudo docker compose up -d
+#            sudo docker image prune -f
+#
+#  # 4. Self-hosted Runner 중지
+#  stop-actions-runner:
+#    needs: run-docker-image
+#    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      # 4-1. AWS CLI 자격 증명
+#      - name: Configure AWS CLI
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ vars.AWS_REGION }}
+#
+#      # 4-2. Runner 서버 중지
+#      - name: Stop Runner Server
+#        run: |
+#          RUNNER_ID=$(aws ec2 describe-instances \
+#          --filters "Name=tag:${{ vars.NAME_TAG }},Values=${{ vars.ACTIONS_RUNNER_NAME_TAG_VALUE }}" \
+#          --query 'Reservations[0].Instances[0].InstanceId' --output text)
+#          aws ec2 stop-instances --instance-ids $RUNNER_ID
 
