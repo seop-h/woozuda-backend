@@ -71,8 +71,8 @@ jobs:
           touch deploy.sh
           echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
           echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
-          echo "sudo docker compose down" >> deploy.sh
-          echo "sudo docker compose --env-file .env up -d" >> deploy.sh
+          echo "sudo docker compose --env-file /home/ubuntu/app/.env down" >> deploy.sh
+          echo "sudo docker compose --env-file /home/ubuntu/app/.env up -d" >> deploy.sh
           echo "sudo docker image prune -f" >> deploy.sh
           
           cp configurations/appspec.yml appspec.yml
