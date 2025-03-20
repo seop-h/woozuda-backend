@@ -62,20 +62,13 @@ jobs:
       - name: Prepare Deployment Package
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          touch .env
-          echo "ECR_IMAGE=${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> .env
-          echo "LOG_PATH_PREFIX=${{ secrets.LOG_PATH_PREFIX }}" >> .env
-          echo "HOST_LOG_PATH_PREFIX=${{ secrets.HOST_LOG_PATH_PREFIX }}" >> .env
-          echo "LOKI_DOMAIN=${{ secrets.LOKI_DOMAIN }}" >> .env
-          cp .env deploy/
-          
+        run: |         
           touch deploy.sh
-          echo "cd /home/ubuntu/app/deploy" >> deploy.sh
+          echo "cd /home/ubuntu/app" >> deploy.sh
           echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
           echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
-          echo "sudo docker compose --env-file .env down" >> deploy.sh
-          echo "sudo docker compose --env-file .env up -d" >> deploy.sh
+          echo "sudo docker compose down" >> deploy.sh
+          echo "sudo docker compose up -d" >> deploy.sh
           echo "sudo docker image prune -f" >> deploy.sh
           cp deploy.sh deploy/
           
