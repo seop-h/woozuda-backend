@@ -1,5 +1,8 @@
 package com.woozuda.backend.global.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -19,21 +22,32 @@ public class RedisCacheConfig {
 
     @Bean
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
+        // 1. ObjectMapper에 타입 정보를 포함시키는 설정
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        // 2. Jackson2JsonRedisSerializer에 커스텀 ObjectMapper 주입
+        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
+
+        // 3. RedisCacheConfiguration에 Serializer 설정
         RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
                 .defaultCacheConfig()
-                //1. Redis 에 Key 를 저장할 때 String 으로 직렬화(변환)해서 저장
+                //3-1. Redis 에 Key 를 저장할 때 String 으로 직렬화(변환)해서 저장
                 .serializeKeysWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
                                 new StringRedisSerializer()
                         )
                 )
-                //2. Redis 에 Value 를 저장할 때 Json 으로 직렬화(변환)해서 저장
+                //3-2. Redis 에 Value 를 저장할 때 Json 으로 직렬화(변환)해서 저장
                 .serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
-                                new Jackson2JsonRedisSerializer<Object>(Object.class)
+                                serializer
                         )
                 )
-                //3. 데이터의 만료기간(TTL) 설정
                 .entryTtl(Duration.ofMinutes(1L));
 
         return RedisCacheManager
