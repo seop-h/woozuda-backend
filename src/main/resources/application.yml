@@ -11,6 +11,11 @@ spring:
     username: "${database_username}"
     password: "${database_password}"
 
+  data:
+    redis:
+      host: "${redis_host}"
+      port: "${redis_port}"
+
   jwt:
     secret: "${jwt_hashcode}"
 
