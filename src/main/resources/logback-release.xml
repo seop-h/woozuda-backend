@@ -69,4 +69,8 @@
         <appender-ref ref="SQL_LOG"/>
     </logger>
 
+    <logger name="org.springframework.cache" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE_LOG"/>
+    </logger>
+
 </configuration>
