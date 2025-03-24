@@ -20,6 +20,7 @@ import com.woozuda.backend.note.repository.NoteRepository;
 import com.woozuda.backend.tag.entity.Tag;
 import com.woozuda.backend.tag.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,11 @@ public class DiaryService {
     private final NoteRepository noteRepository;
     private final ImageService imageService;
 
+    @Cacheable(
+            cacheNames = "getDairyList", //캐시 이름 설정
+            key = " 'diaryList:username:' + #username", //Redis에 저장할 key 이름 설정
+            cacheManager = "redisCacheManager" //사용할 cacheManager의 Bean 이름 지정
+    )
     @Transactional(readOnly = true)
     public DiaryListResponseDto getDairyList(String username) {
         List<SingleDiaryResponseDto> diaryList = diaryRepository.searchDiarySummaryList(username);
