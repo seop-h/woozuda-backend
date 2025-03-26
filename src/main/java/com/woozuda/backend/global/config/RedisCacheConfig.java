@@ -2,7 +2,9 @@ package com.woozuda.backend.global.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +24,14 @@ public class RedisCacheConfig {
 
     @Bean
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
-        // 1. ObjectMapper에 타입 정보를 포함시키는 설정
+        // 1. ObjectMapper 설정
         ObjectMapper objectMapper = new ObjectMapper();
+
+        //1-1.JavaTimeModule 등록
+        objectMapper.registerModule(new JavaTimeModule());
+        //1-2. ISO-8601 포맷 사용 설정 (timestamp 방지)
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        //1-3. 캐싱되는 데이터의 타입 정보를 포함하도록 설정
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,
