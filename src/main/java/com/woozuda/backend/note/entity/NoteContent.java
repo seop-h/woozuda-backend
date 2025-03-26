@@ -36,7 +36,7 @@ public class NoteContent extends BaseTimeEntity {
     private Integer noteOrder;
 
     @Column(length = 2000, nullable = false)
-    @Convert(converter = NoteContentConverter.class)
+//    @Convert(converter = NoteContentConverter.class)
     private String content; // 회고 부분 내용
 
     private NoteContent(Integer noteOrder, String content) {
