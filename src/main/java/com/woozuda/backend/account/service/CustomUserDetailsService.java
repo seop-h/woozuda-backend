@@ -21,8 +21,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        log.info("로그인 디버깅 로그 - ");
-        log.info(username);
+//        log.info("로그인 디버깅 로그 - ");
+//        log.info(username);
         UserEntity userData = userRepository.findByUsername(username);
 
         if(userData != null){
