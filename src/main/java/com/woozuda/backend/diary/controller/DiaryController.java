@@ -43,7 +43,7 @@ public class DiaryController {
     ) {
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
-        log.info("[{}] getDiaryList() 호출", username);
+//        log.info("[{}] getDiaryList() 호출", username);
         return ResponseEntity.ok(responseDto);
     }
 

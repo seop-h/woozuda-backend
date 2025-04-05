@@ -60,13 +60,13 @@
     </appender>
 
     <root level="INFO">
-        <appender-ref ref="CONSOLE_LOG"/>
+<!--        <appender-ref ref="CONSOLE_LOG"/>-->
         <appender-ref ref="INFO_LOG"/>
         <appender-ref ref="WARN_ERROR_LOG"/>
     </root>
 
-    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
-        <appender-ref ref="SQL_LOG"/>
-    </logger>
+<!--    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">-->
+<!--        <appender-ref ref="SQL_LOG"/>-->
+<!--    </logger>-->
 
 </configuration>
