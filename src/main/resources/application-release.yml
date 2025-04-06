@@ -9,21 +9,13 @@ spring:
 management:
   server:
     port: "${actuator_port}"
-  prometheus:
-    metrics:
-      export:
-        enabled: false
   endpoints:
     web:
       exposure:
-        include: health
-#  endpoints:
-#    web:
-#      exposure:
-#        include: prometheus
-#  endpoint:
-#    prometheus:
-#      enabled: true #default
+        include: prometheus
+  endpoint:
+    prometheus:
+      enabled: true #default
 
 logging:
   config: "classpath:./logback-release.xml"
