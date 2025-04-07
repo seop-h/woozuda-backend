@@ -21,4 +21,9 @@ public class AdminController {
 
     @GetMapping("/account/sample/user")
     public String userP(){ return "user can access this page! ";}
+
+    @GetMapping("/health")
+    public String healthcheck() {
+        return "OK";
+    }
 }
