@@ -6,16 +6,16 @@ spring:
     hibernate:
       ddl-auto: none
 
-#management:
-#  server:
-#    port: "${actuator_port}"
-#  endpoints:
-#    web:
-#      exposure:
-#        include: prometheus
-#  endpoint:
-#    prometheus:
-#      enabled: true #default
+management:
+  server:
+    port: "${actuator_port}"
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    prometheus:
+      enabled: true #default
 
 logging:
   config: "classpath:./logback-release.xml"
