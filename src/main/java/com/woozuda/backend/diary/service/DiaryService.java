@@ -45,6 +45,12 @@ public class DiaryService {
     private final NoteRepository noteRepository;
     private final ImageService imageService;
 
+    @Transactional(readOnly = true)
+    public DiaryListResponseDto getDiaryListNoAuth(Long id) {
+        List<SingleDiaryResponseDto> diaryList = diaryRepository.searchDiarySummaryList(id);
+        return new DiaryListResponseDto(diaryList);
+    }
+
     /*@Cacheable(
             cacheNames = "getDairyList", //캐시 이름 설정
             key = " 'diaryList:username:' + #username", //Redis에 저장할 key 이름 설정

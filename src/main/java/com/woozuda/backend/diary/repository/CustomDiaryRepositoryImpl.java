@@ -34,6 +34,52 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
     }
 
     @Override
+    public List<SingleDiaryResponseDto> searchDiarySummaryList(Long id) {
+        List<Tuple> results = query
+                .select(
+                        diary.id,
+                        diary.title,
+                        diary.image,
+                        diary.startDate,
+                        diary.endDate,
+                        diary.noteCount,
+                        tag.name
+                )
+                .from(diary)
+                .join(diary.user, userEntity)
+                .leftJoin(diary.tagList, diaryTag)
+                .leftJoin(diaryTag.tag, tag)
+                .where(userEntity.id.eq(id))
+                .orderBy(diary.createdAt.desc())
+                .fetch();
+
+        // 결과를 DTO로 매핑
+        Map<Long, SingleDiaryResponseDto> diaryMap = new HashMap<>();
+
+        results.forEach(tuple -> {
+            Long diaryId = tuple.get(diary.id);
+            SingleDiaryResponseDto dto = diaryMap.getOrDefault(diaryId, new SingleDiaryResponseDto(
+                    diaryId,
+                    tuple.get(diary.title),
+                    new ArrayList<>(),
+                    tuple.get(diary.image),
+                    tuple.get(diary.startDate),
+                    tuple.get(diary.endDate),
+                    tuple.get(diary.noteCount)
+            ));
+
+            String tagName = tuple.get(tag.name);
+            if (tagName != null) {
+                dto.getSubject().add(tagName);
+            }
+
+            diaryMap.put(diaryId, dto);
+        });
+
+        return new ArrayList<>(diaryMap.values());
+    }
+
+    @Override
     public List<SingleDiaryResponseDto> searchDiarySummaryList(String username) {
         // Q 클래스
 

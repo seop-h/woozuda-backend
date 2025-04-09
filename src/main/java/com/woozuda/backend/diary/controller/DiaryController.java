@@ -6,7 +6,6 @@ import com.woozuda.backend.diary.dto.response.DiaryDetailResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryIdResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryListResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryNameListResponseDto;
-import com.woozuda.backend.diary.dto.response.DiaryNameResponseDto;
 import com.woozuda.backend.diary.service.DiaryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,14 @@ public class DiaryController {
 
     private final DiaryService diaryService;
 
+    @GetMapping("/no-auth/{id}")
+    public ResponseEntity<DiaryListResponseDto> getDiaryListNoAuth(
+            @PathVariable("id") Long id
+    ) {
+        DiaryListResponseDto responseDto = diaryService.getDiaryListNoAuth(id);
+        return ResponseEntity.ok(responseDto);
+    }
+
     /*
     TODO 모든 컨트롤러에 @AuthenticationPrincipal CustomUser user, String username = user.getUsername()이 중복됨
          파라미터 레벨에서 바로 username 을 받을 수 있도록 커스텀 애너테이션을 추가하는 등 중복 줄이기
@@ -43,7 +50,6 @@ public class DiaryController {
     ) {
         String username = user.getUsername();
         DiaryListResponseDto responseDto = diaryService.getDairyList(username);
-//        log.info("[{}] getDiaryList() 호출", username);
         return ResponseEntity.ok(responseDto);
     }
 
