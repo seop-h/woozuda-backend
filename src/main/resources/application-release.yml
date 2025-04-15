@@ -5,6 +5,11 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: none
+  datasource:
+    hikari:
+      idle-timeout: 600000 # 10분
+      max-lifetime: 1800000 # 30분
+      keepalive-time: 45000 # 45초. HikariCP가 매 라운드마다 1개씩 ping
 
 management:
   server:
