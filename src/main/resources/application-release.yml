@@ -24,5 +24,9 @@ management:
     prometheus:
       enabled: true #default
 
+server:
+  tomcat:
+    keep-alive-timeout: 5s
+
 logging:
   config: "classpath:./logback-release.xml"
