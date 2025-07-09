@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CustomDiaryRepository {
 
-    List<SingleDiaryResponseDto> searchDiarySummaryList(Long id);
+    List<Diary> searchDiarySummaryList(Long id);
 
     List<SingleDiaryResponseDto> searchDiarySummaryList(String username);
 

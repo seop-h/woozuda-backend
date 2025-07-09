@@ -2,7 +2,10 @@ spring:
   jpa:
     properties:
       hibernate:
+        format_sql: true
         show_sql: true
+  config:
+    import: "classpath:./config/local-var.yml"
 
 # 로깅 레벨 설정
 # 캐시의 조회, 저장, 삭제와 같은 작업에 대한 모든 세부 정보가 로그로 기록됨

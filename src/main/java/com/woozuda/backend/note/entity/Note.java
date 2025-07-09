@@ -87,6 +87,6 @@ public class Note extends BaseTimeEntity {
             noteContents.get(i).update(content.get(i));
         }
 
-        foundDiary.updateDuration();
+//        foundDiary.updateDuration();
     }
 }

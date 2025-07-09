@@ -55,7 +55,7 @@ public class CommonNoteService {
         NoteContent noteContent = NoteContent.of(1, requestDto.getContent());
         savedCommonNote.addContent(noteContent);
 
-        foundDiary.addNote(savedCommonNote.getDate());
+//        foundDiary.addNote(savedCommonNote.getDate());
 
         // 이번에 저장한 자유일기가 그 주의 3번째 일기라면(자유일기 + 질문일기 기준), 알람을 발생합니다.
         alarmService.threePostAlarm(username, requestDto.getDate());

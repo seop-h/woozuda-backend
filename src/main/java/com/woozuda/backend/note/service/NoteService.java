@@ -105,9 +105,9 @@ public class NoteService {
 
         log.info("diaries To Change size = {}", diariesToChange.size());
 
-        for (Diary diary : diariesToChange) {
+        /*for (Diary diary : diariesToChange) {
             diary.updateNoteInfo(requestDto.getId());
-        }
+        }*/
 
 
         //해당 노트에 써있던 이미지들 삭제
