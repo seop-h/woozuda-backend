@@ -1,8 +1,11 @@
 package com.woozuda.backend.note.service;
 
+import com.woozuda.backend.alarm.service.AlarmService;
 import com.woozuda.backend.diary.dto.response.NoteIdResponseDto;
 import com.woozuda.backend.diary.entity.Diary;
 import com.woozuda.backend.diary.repository.DiaryRepository;
+import com.woozuda.backend.image.service.ImageService;
+import com.woozuda.backend.image.type.ImageType;
 import com.woozuda.backend.note.dto.request.CommonNoteModifyRequestDto;
 import com.woozuda.backend.note.dto.request.CommonNoteSaveRequestDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
@@ -31,6 +34,8 @@ public class CommonNoteService {
     private final CommonNoteRepository commonNoteRepository;
     private final NoteRepository noteRepository;
     private final DiaryRepository diaryRepository;
+    private final AlarmService alarmService;
+    private final ImageService imageService;
 
     public NoteIdResponseDto saveCommonNote(String username, CommonNoteSaveRequestDto requestDto) {
         Diary foundDiary = diaryRepository.searchDiary(requestDto.getDiaryId(), username);
@@ -50,7 +55,13 @@ public class CommonNoteService {
         NoteContent noteContent = NoteContent.of(1, requestDto.getContent());
         savedCommonNote.addContent(noteContent);
 
-        foundDiary.addNote(savedCommonNote.getDate());
+//        foundDiary.addNote(savedCommonNote.getDate());
+
+        // 이번에 저장한 자유일기가 그 주의 3번째 일기라면(자유일기 + 질문일기 기준), 알람을 발생합니다.
+        alarmService.threePostAlarm(username, requestDto.getDate());
+
+        // 이미지 테이블 반영 (자유일기 생성 후)
+        imageService.afterCreate(ImageType.NOTE, savedCommonNote.getId(), requestDto.getContent());
 
         return NoteIdResponseDto.of(savedCommonNote.getId());
     }
@@ -79,6 +90,9 @@ public class CommonNoteService {
                 LocalDate.parse(requestDto.getDate()),
                 requestDto.getContent()
         );
+
+        // 이미지 테이블 반영 (자유일기 변경 후)
+        imageService.afterUpdate(ImageType.NOTE, noteId, requestDto.getContent());
 
         return NoteIdResponseDto.of(foundNote.getId());
     }

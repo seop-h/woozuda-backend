@@ -3,7 +3,9 @@ package com.woozuda.backend.shortlink.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.woozuda.backend.note.entity.CommonNote;
 import com.woozuda.backend.note.entity.Note;
+import com.woozuda.backend.note.entity.QuestionNote;
 import com.woozuda.backend.note.entity.type.Visibility;
 import com.woozuda.backend.shortlink.dto.note.SharedCommonNoteDto;
 import com.woozuda.backend.shortlink.dto.note.SharedNoteDto;
@@ -11,12 +13,14 @@ import com.woozuda.backend.shortlink.dto.note.SharedQuestionNoteDto;
 import com.woozuda.backend.shortlink.dto.note.SharedRetrospectiveNoteDto;
 import jakarta.persistence.EntityManager;
 
+import java.time.*;
 import java.util.List;
 import static com.querydsl.core.group.GroupBy.list;
 import static com.querydsl.core.group.GroupBy.groupBy;
 import static com.woozuda.backend.account.entity.QUserEntity.userEntity;
 import static com.woozuda.backend.diary.entity.QDiary.diary;
 import static com.woozuda.backend.note.entity.QCommonNote.commonNote;
+import static com.woozuda.backend.note.entity.QNote.note;
 import static com.woozuda.backend.note.entity.QNoteContent.noteContent;
 import static com.woozuda.backend.note.entity.QQuestionNote.questionNote;
 import static com.woozuda.backend.note.entity.QRetrospectiveNote.retrospectiveNote;
@@ -94,6 +98,25 @@ public class SharedNoteRepoImpl implements SharedNoteRepo{
                         ));
     }
 
+    // 특정 유저의 질문일기, 자유일기 수를 카운트 하는 쿼리 . (알람 기능에 쓰입니다)
+    @Override
+    public Long noteCountToMakeReport(String username, String date){
+
+        //저장 노트의 월 ~ 일 범위 자르기 (월요일 00:00 ~ 그 다음주 월요일 00:00)
+        LocalDate saveDate = LocalDate.parse(date);
+        LocalDate thisWeekStart = saveDate.with(DayOfWeek.MONDAY);
+        LocalDate thisWeekEnd = thisWeekStart.plusDays(6);
+
+        return query
+                .select(note.count())
+                .from(note)
+                .leftJoin(note.diary, diary)
+                .leftJoin(diary.user, userEntity)
+                .where(userEntity.username.eq(username)
+                        .and(note.instanceOf(CommonNote.class).or(note.instanceOf(QuestionNote.class)))
+                        .and(note.date.between(thisWeekStart, thisWeekEnd)))
+                .fetchOne();
+    }
 
 
     @Override

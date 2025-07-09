@@ -2,8 +2,8 @@ package com.woozuda.backend.account.controller;
 
 import com.woozuda.backend.account.dto.JoinDTO;
 import com.woozuda.backend.account.service.JoinService;
-import com.woozuda.backend.exception.InvalidEmailException;
-import com.woozuda.backend.exception.UsernameAlreadyExistsException;
+import com.woozuda.backend.exception.account.InvalidEmailException;
+import com.woozuda.backend.exception.account.UsernameAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,15 +21,7 @@ public class JoinController {
 
     @PostMapping("/join")
     public ResponseEntity<Void> joinProcess(@RequestBody JoinDTO joinDTO){
-
-        try {
-            joinService.joinProcess(joinDTO);
-        }catch(InvalidEmailException e){
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
-        }catch(UsernameAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
+        joinService.joinProcess(joinDTO);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

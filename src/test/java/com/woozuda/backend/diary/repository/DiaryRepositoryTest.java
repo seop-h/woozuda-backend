@@ -3,12 +3,14 @@ package com.woozuda.backend.diary.repository;
 import com.woozuda.backend.account.entity.UserEntity;
 import com.woozuda.backend.diary.dto.response.SingleDiaryResponseDto;
 import com.woozuda.backend.diary.entity.Diary;
+import com.woozuda.backend.note.entity.converter.AesEncryptor;
 import com.woozuda.backend.tag.entity.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import static com.woozuda.backend.account.entity.AiType.PICTURE_NOVEL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@MockBean(AesEncryptor.class)
 @Transactional
 class DiaryRepositoryTest {
 

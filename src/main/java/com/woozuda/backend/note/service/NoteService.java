@@ -2,6 +2,8 @@ package com.woozuda.backend.note.service;
 
 import com.woozuda.backend.diary.entity.Diary;
 import com.woozuda.backend.diary.repository.DiaryRepository;
+import com.woozuda.backend.image.service.ImageService;
+import com.woozuda.backend.image.type.ImageType;
 import com.woozuda.backend.note.dto.request.NoteCondRequestDto;
 import com.woozuda.backend.note.dto.request.NoteIdRequestDto;
 import com.woozuda.backend.note.dto.response.DateInfoResponseDto;
@@ -33,6 +35,7 @@ public class NoteService {
 
     private final NoteRepository noteRepository;
     private final DiaryRepository diaryRepository;
+    private final ImageService imageService;
 
     /**
      * 최신순 일기 조회
@@ -102,9 +105,18 @@ public class NoteService {
 
         log.info("diaries To Change size = {}", diariesToChange.size());
 
-        for (Diary diary : diariesToChange) {
+        /*for (Diary diary : diariesToChange) {
             diary.updateNoteInfo(requestDto.getId());
+        }*/
+
+
+        //해당 노트에 써있던 이미지들 삭제
+        List<Long> deleteNoteIds = requestDto.getId();
+
+        for(Long deleteNoteId : deleteNoteIds){
+            imageService.afterDelete(ImageType.NOTE, deleteNoteId);
         }
+
     }
 
     public NoteCountResponseDto getNoteCount(String username, LocalDate startDate, LocalDate endDate) {

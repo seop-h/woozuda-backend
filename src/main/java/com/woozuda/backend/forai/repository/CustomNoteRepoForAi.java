@@ -1,6 +1,5 @@
 package com.woozuda.backend.forai.repository;
 
-import com.woozuda.backend.forai.dto.CountRecallDto;
 import com.woozuda.backend.forai.dto.NonRetroNoteEntryResponseDto;
 import com.woozuda.backend.forai.dto.RetroNoteEntryResponseDto;
 import com.woozuda.backend.note.entity.type.Framework;

@@ -1,21 +1,22 @@
 package com.woozuda.backend.note.repository;
 
-import com.woozuda.backend.note.entity.Question;
-import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.Disabled;
+import com.woozuda.backend.note.entity.converter.AesEncryptor;
+import com.woozuda.backend.question.entity.Question;
+import com.woozuda.backend.question.repository.QuestionRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@MockBean(AesEncryptor.class)
 @Transactional
 class QuestionRepositoryTest {
 

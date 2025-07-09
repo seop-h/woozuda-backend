@@ -2,10 +2,8 @@ package com.woozuda.backend.forai.repository;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.woozuda.backend.forai.dto.CountRecallDto;
 import com.woozuda.backend.forai.dto.NonRetroNoteEntryResponseDto;
 import com.woozuda.backend.forai.dto.RetroNoteEntryResponseDto;
 import com.woozuda.backend.note.entity.type.Framework;

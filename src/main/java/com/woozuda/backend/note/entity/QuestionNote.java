@@ -5,6 +5,7 @@ import com.woozuda.backend.note.entity.type.Feeling;
 import com.woozuda.backend.note.entity.type.Season;
 import com.woozuda.backend.note.entity.type.Visibility;
 import com.woozuda.backend.note.entity.type.Weather;
+import com.woozuda.backend.question.entity.Question;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;

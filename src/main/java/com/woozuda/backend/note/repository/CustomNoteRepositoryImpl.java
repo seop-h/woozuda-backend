@@ -26,9 +26,9 @@ import static com.woozuda.backend.diary.entity.QDiary.diary;
 import static com.woozuda.backend.note.entity.QCommonNote.commonNote;
 import static com.woozuda.backend.note.entity.QNote.note;
 import static com.woozuda.backend.note.entity.QNoteContent.noteContent;
-import static com.woozuda.backend.note.entity.QQuestion.question;
 import static com.woozuda.backend.note.entity.QQuestionNote.questionNote;
 import static com.woozuda.backend.note.entity.QRetrospectiveNote.retrospectiveNote;
+import static com.woozuda.backend.question.entity.QQuestion.question;
 import static java.lang.Long.sum;
 
 /**

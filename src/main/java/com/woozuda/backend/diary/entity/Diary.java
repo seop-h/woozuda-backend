@@ -50,12 +50,12 @@ public class Diary extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    private LocalDate startDate;
+//    private LocalDate startDate;
 
-    private LocalDate endDate;
+//    private LocalDate endDate;
 
-    @Column(nullable = false)
-    private Integer noteCount;
+//    @Column(nullable = false)
+//    private Integer noteCount;
 
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("date ASC")
@@ -68,7 +68,7 @@ public class Diary extends BaseTimeEntity {
         this.user = user;
         this.image = image;
         this.title = title;
-        this.noteCount = 0;
+//        this.noteCount = 0;
     }
 
     public static Diary of(UserEntity user, String image, String title) {
@@ -90,7 +90,7 @@ public class Diary extends BaseTimeEntity {
         this.image = imgUrl;
     }
 
-    public void addNote(LocalDate noteDate) {
+    /*public void addNote(LocalDate noteDate) {
         if (startDate == null || startDate.isAfter(noteDate)) {
             startDate = noteDate;
         }
@@ -98,9 +98,9 @@ public class Diary extends BaseTimeEntity {
             endDate = noteDate;
         }
         noteCount++;
-    }
+    }*/
 
-    public void updateDuration() {
+    /*public void updateDuration() {
         List<LocalDate> noteDates = new ArrayList<>(
                 this.noteList.stream()
                         .map(Note::getDate)
@@ -110,9 +110,9 @@ public class Diary extends BaseTimeEntity {
         Collections.sort(noteDates);
         this.startDate = noteDates.getFirst();
         this.endDate = noteDates.getLast();
-    }
+    }*/
 
-    public void updateNoteInfo(List<Long> noteIdList) {
+    /*public void updateNoteInfo(List<Long> noteIdList) {
         log.info("noteIdList = {}", noteIdList);
 
         log.info("noteList size = {}", noteList.size());
@@ -124,5 +124,5 @@ public class Diary extends BaseTimeEntity {
         this.startDate = !noteList.isEmpty() ? noteList.getFirst().getDate() : null;
         this.endDate = !noteList.isEmpty() ? noteList.getLast().getDate() : null;
         this.noteCount = noteList.size();
-    }
+    }*/
 }

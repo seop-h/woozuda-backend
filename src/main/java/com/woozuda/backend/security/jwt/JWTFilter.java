@@ -26,16 +26,8 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 필터를 적용하지 않을 경로를 지정
-        if (path.equals("/join") || path.equals("/login") || path.equals("/account/sample/alluser") || path.startsWith("/api/shortlink/note") || path.startsWith("/api/shortlink/ai") || path.startsWith("/actuator")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        //Authorization 을 키 값으로 가지는 것을 찾음
-
         // 헤더 버전
-        //String authorization= request.getHeader("Authorization");
+        // String authorization = request.getHeader("Authorization");
 
         String authorization = null;
 

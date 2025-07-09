@@ -47,7 +47,8 @@ public class AiRecall_4fs_AnalysisService {
                 4. improvementSuggest : 사용자의 행동이나 패턴을 기반으로 개선할 점을 두 줄 정도로 제시해 주세요.
                 5. utilizationTips : 사용자가 자신의 행동을 더 효율적으로 개선하거나 활용할 수 있는 방법을 두 줄 정도로 제시해 주세요.
                 6. **중요**절대 모든 값의 Null 및 0을 반환하지 마세요. 비슷한 분석 결과값을 반환해주세요.
-                7. 위의 내용을 포함하여 각 항목을 한번만 반환해주세요. 예:
+                7. 시작날짜와 끝나는 날짜는 꼭 출력해주세요.
+                8. 위의 내용을 포함하여 각 항목을 한번만 반환해주세요. 예:
                     start_date: 2024-12-01
                     end_date: 2024-12-31
                     type : 4FS
@@ -83,10 +84,10 @@ public class AiRecall_4fs_AnalysisService {
             /**
              * 날짜 변경
              */
-            LocalDate today = LocalDate.now();
-            LocalDate startDate = today.with(DayOfWeek.MONDAY); // 이번 주 월요일
-            LocalDate endDate = today.with(DayOfWeek.SUNDAY); // 이번 주 일요일
-
+            String startDate = extractValue(content, "start_date");
+            String endDate = extractValue(content, "end_date");
+            LocalDate start_date = convertStringToDate(startDate);
+            LocalDate end_date = convertStringToDate(endDate);
             /**
              * type 변경
              */
@@ -101,8 +102,8 @@ public class AiRecall_4fs_AnalysisService {
 
             return new Airecall_4fs_DTO(
                     airecallType,
-                    startDate,
-                    endDate,
+                    start_date,
+                    end_date,
                     patternAnalysis,
                     positiveBehavior,
                     improvementSuggest,
@@ -115,7 +116,18 @@ public class AiRecall_4fs_AnalysisService {
             throw new RuntimeException("응답 매핑 중 오류 발생: " + e.getMessage());
         }
     }
-
+    private LocalDate convertStringToDate(String date) {
+        if (date != null) {
+            date = date.replaceAll("\"", ""); // 따옴표 제거
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try {
+            return LocalDate.parse(date, formatter);
+        } catch (DateTimeParseException e) {
+            log.error("잘못된 날짜 형식: '{}'. 기본값을 사용합니다.", date);
+            return LocalDate.now(); // 기본값 설정
+        }
+    }
     private String extractValue(String content, String key) {
         if (content == null || content.isEmpty()) {
             log.warn("내용이 비어 있음: {}", key);

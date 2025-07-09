@@ -1,7 +1,9 @@
 package com.woozuda.backend.note.entity;
 
 import com.woozuda.backend.global.entity.BaseTimeEntity;
+import com.woozuda.backend.note.entity.converter.NoteContentConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +36,7 @@ public class NoteContent extends BaseTimeEntity {
     private Integer noteOrder;
 
     @Column(length = 2000, nullable = false)
+//    @Convert(converter = NoteContentConverter.class)
     private String content; // 회고 부분 내용
 
     private NoteContent(Integer noteOrder, String content) {

@@ -4,6 +4,7 @@ import com.woozuda.backend.account.dto.CustomUser;
 import com.woozuda.backend.ai_diary.dto.AiDiaryResponseDTO;
 import com.woozuda.backend.ai_diary.service.AiDiaryService;
 import com.woozuda.backend.ai_diary.service.DiaryAnalysisService;
+import com.woozuda.backend.ai_diary.service.DiaryAnalysisServiceNAVER;
 import com.woozuda.backend.forai.dto.NonRetroNoteEntryResponseDto;
 import com.woozuda.backend.forai.service.CustomeNoteRepoForAiService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class AIDiaryController {
     private final DiaryAnalysisService diaryAnalysisService;
     private final AiDiaryService aiDiaryService;
     private final CustomeNoteRepoForAiService customeNoteRepoForAiService;
-
+    private final DiaryAnalysisServiceNAVER diaryAnalysisServiceNAVER;
     @GetMapping("/count")
     public ResponseEntity<Long> getDiaryCount(
             @RequestParam("start_date") LocalDate start_date,
@@ -65,7 +66,7 @@ public class AIDiaryController {
         }
         // 일기 분석 실행!
         diaryAnalysisService.analyzeDiary(diaryList, username);
-
+        //diaryAnalysisServiceNAVER.analyzeDiary(diaryList,username);
         // 정상적인 경우는 OK 상태와 함께 성공 메시지 또는 데이터를 반환
         return ResponseEntity.ok("일기 분석 성공");
     }

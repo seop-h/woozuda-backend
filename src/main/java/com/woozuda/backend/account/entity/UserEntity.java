@@ -47,6 +47,6 @@ public class UserEntity extends BaseTimeEntity {
     private String provider;
 
     public static UserEntity transEntity(JoinDTO joinDTO){
-        return new UserEntity(null, joinDTO.getUsername(), joinDTO.getPassword(), "ROLE_ADMIN", AiType.PICTURE_NOVEL, true, joinDTO.getUsername(), "woozuda");
+        return new UserEntity(null, joinDTO.getUsername(), joinDTO.getPassword(), "ROLE_USER", AiType.PICTURE_NOVEL, true, joinDTO.getUsername(), "woozuda");
     }
 }

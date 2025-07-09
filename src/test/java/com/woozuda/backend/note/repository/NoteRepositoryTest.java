@@ -4,32 +4,67 @@ import com.woozuda.backend.account.entity.UserEntity;
 import com.woozuda.backend.diary.entity.Diary;
 import com.woozuda.backend.note.dto.request.NoteCondRequestDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
-import com.woozuda.backend.note.entity.*;
+import com.woozuda.backend.note.entity.CommonNote;
+import com.woozuda.backend.note.entity.NoteContent;
+import com.woozuda.backend.note.entity.QuestionNote;
+import com.woozuda.backend.note.entity.RetrospectiveNote;
+import com.woozuda.backend.note.entity.converter.AesEncryptor;
+import com.woozuda.backend.note.entity.converter.NoteContentConverter;
+import com.woozuda.backend.question.entity.Question;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.woozuda.backend.account.entity.AiType.PICTURE_NOVEL;
-import static com.woozuda.backend.note.entity.type.Feeling.*;
-import static com.woozuda.backend.note.entity.type.Framework.*;
+import static com.woozuda.backend.note.entity.type.Feeling.ANGER;
+import static com.woozuda.backend.note.entity.type.Feeling.CONTENT;
+import static com.woozuda.backend.note.entity.type.Feeling.DISSATISFACTION;
+import static com.woozuda.backend.note.entity.type.Feeling.JOY;
+import static com.woozuda.backend.note.entity.type.Feeling.NEUTRAL;
+import static com.woozuda.backend.note.entity.type.Feeling.SADNESS;
+import static com.woozuda.backend.note.entity.type.Feeling.TIREDNESS;
+import static com.woozuda.backend.note.entity.type.Framework.FOUR_F_S;
+import static com.woozuda.backend.note.entity.type.Framework.KPT;
+import static com.woozuda.backend.note.entity.type.Framework.PMI;
+import static com.woozuda.backend.note.entity.type.Framework.SCS;
 import static com.woozuda.backend.note.entity.type.Season.FALL;
 import static com.woozuda.backend.note.entity.type.Season.WINTER;
 import static com.woozuda.backend.note.entity.type.Visibility.PRIVATE;
 import static com.woozuda.backend.note.entity.type.Visibility.PUBLIC;
-import static com.woozuda.backend.note.entity.type.Weather.*;
+import static com.woozuda.backend.note.entity.type.Weather.CLEAR;
+import static com.woozuda.backend.note.entity.type.Weather.CLOUDY;
+import static com.woozuda.backend.note.entity.type.Weather.RAIN;
+import static com.woozuda.backend.note.entity.type.Weather.SNOW;
+import static com.woozuda.backend.note.entity.type.Weather.SUNNY;
+import static com.woozuda.backend.note.entity.type.Weather.THUNDERSTORM;
 import static java.time.Month.DECEMBER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Transactional
 class NoteRepositoryTest {
+
+    @TestConfiguration
+    static class NoteContentTestConfig {
+        @Bean
+        public AesEncryptor aesEncryptor() {
+            return new AesEncryptor("test-password");
+        }
+
+        @Bean
+        public NoteContentConverter noteContentConverter(AesEncryptor aesEncryptor) {
+            return new NoteContentConverter(aesEncryptor);
+        }
+    }
 
     LocalDate date1 = LocalDate.of(2024, DECEMBER, 5);
     LocalDate date2 = LocalDate.of(2024, DECEMBER, 6);

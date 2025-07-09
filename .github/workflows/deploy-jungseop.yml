@@ -1,0 +1,155 @@
+name: Deploy to Test Environment
+
+on:
+  push:
+    branches:
+      - jungseop
+
+env:
+  IMAGE_TAG: latest
+
+jobs:
+  # 1. ECR에 도커 이미지 푸시 | S3에 배포 스크립트 및 CodeDeploy appspec.yml 업로드
+  upload-files:
+    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1-1. 소스코드 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1-2. Java 환경 설정
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # 1-3. Gradle 환경 설정
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 1-4. Spring Boot 애플리케이션 빌드
+      - name: Build Spring Boot Application
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+        shell: bash
+
+      # 1-5. AWS CLI 자격 증명
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.UPLOAD_FILES_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.UPLOAD_FILES_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # 1-6. ECR 로그인
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 1-7. Docker Image 빌드 및 푸시
+      - name: Build and Push Docker Image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t ${REGISTRY}/${{ secrets.ECR_REPOSITORY}}:${{ env.IMAGE_TAG }} .
+          docker push ${REGISTRY}/${{ secrets.ECR_REPOSITORY}}:${{ env.IMAGE_TAG }}
+
+      # 1-8. CodeDeploy용 압축 파일 생성
+      - name: Prepare Deployment Package
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |         
+          touch deploy.sh
+          echo "cd /home/ubuntu/app" >> deploy.sh
+          echo "aws ecr get-login-password --region ${{ vars.AWS_REGION }} | sudo docker login --username AWS --password-stdin ${REGISTRY}" >> deploy.sh
+          echo "sudo docker pull ${REGISTRY}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> deploy.sh
+          echo "sudo docker compose down" >> deploy.sh
+          echo "sudo docker compose up -d" >> deploy.sh
+          echo "sudo docker image prune -f" >> deploy.sh
+          cp deploy.sh deploy/
+          
+          zip -r deploy.zip deploy/
+
+      # 1-9. S3에 업로드
+      - name: Upload to S3
+        run: aws s3 cp --region ${{ vars.AWS_REGION }} ./deploy.zip s3://${{ secrets.DEPLOY_BUCKET_NAME }}
+
+  # TODO 지금은 필요한 모든 인스턴스를 모두 수동으로 사작하고 있지만, 이것도 self-hosted runner에서 aws cli를 통해 실행시킬 수 있도록 job 추가
+
+  # 2. 필요한 모든 AWS 리소스 실행
+  start-aws-resources:
+    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+    runs-on: ubuntu-latest
+
+    steps:
+      # 2-1. AWS CLI 자격 증명
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.START_AWS_RESOURCES_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.START_AWS_RESOURCES_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # 2-2. 중지 상태인 EC2 인스턴스의 ID 조회
+      - name: Get Stopped EC2 Instances IDs
+        id: ec2
+        run: |
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+          --filters "Name=tag:${{ vars.TYPE_TAG }},Values=${{ vars.TYPE_TAG_VALUE }}" "Name=instance-state-name,Values=stopped" \
+          --query "Reservations[*].Instances[*].InstanceId" --output text | tr '\n' ' ')
+          echo "Found Instance Ids stopped: ..$INSTANCE_IDS.."
+          
+          echo "instance_ids=$INSTANCE_IDS" >> $GITHUB_OUTPUT
+
+      # 2-3. EC2 인스턴스 실행
+      - name: Start EC2 Instances if Stopped
+        if: steps.ec2.outputs.instance_ids != '' && steps.ec2.outputs.instance_ids != null
+        run: | 
+          aws ec2 start-instances --instance-ids ${{steps.ec2.outputs.instance_ids}}
+          aws ec2 wait instance-running --instance-ids ${{steps.ec2.outputs.instance_ids}}
+
+#      # 2-4. RDS 인스턴스의 상태 체크
+#      - name: Check RDS Instance Status
+#        id: rds
+#        run: |
+#          RDS_INSTANCE_STATUS=$(aws rds describe-db-instances \
+#          --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }} \
+#          --query "DBInstances[0].DBInstanceStatus" --output text)
+#
+#          echo "rds_instance_satus=$RDS_INSTANCE_STATUS" >> $GITHUB_OUTPUT
+#
+#      # 2-5. RDS 인스턴스 실행
+#      - name: Start RDS Instance if Stopped
+#        if: steps.rds.outputs.rds_instance_satus != 'available'
+#        run: |
+#          aws rds start-db-instance --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
+#          aws rds wait db-instance-available --db-instance-identifier ${{ secrets.RDS_INSTANCE_IDENTIFIER }}
+
+  # 3. CodeDeploy 실행
+  run-code-deploy:
+    needs: [upload-files, start-aws-resources]  # 위 두 개의 과정을 모두 완료한 후 실행
+    if: github.repository == 'seop-h/woozuda-backend' # fork 받은 리포지토리인지 확인
+    runs-on: ubuntu-latest
+
+    steps:
+      # 3-1. AWS CLI 자격 증명
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.RUN_CODE_DEPLOY_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.RUN_CODE_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      # 3-2. CodeDeploy 실행
+      - name: Run CodeDeploy
+        run: |
+          aws deploy create-deployment \
+          --application-name deploy-woozuda \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name deploy-woozuda-group \
+          --s3-location bucket=${{ secrets.DEPLOY_BUCKET_NAME }},bundleType=zip,key=deploy.zip
+

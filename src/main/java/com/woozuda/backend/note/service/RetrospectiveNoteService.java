@@ -55,7 +55,7 @@ public class RetrospectiveNoteService {
             savedRetrospectiveNote.addContent(noteContent);
         }
 
-        foundDiary.addNote(savedRetrospectiveNote.getDate());
+//        foundDiary.addNote(savedRetrospectiveNote.getDate());
 
         return NoteIdResponseDto.of(savedRetrospectiveNote.getId());
     }

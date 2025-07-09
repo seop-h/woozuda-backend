@@ -6,10 +6,10 @@ import com.woozuda.backend.diary.dto.response.DiaryDetailResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryIdResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryListResponseDto;
 import com.woozuda.backend.diary.dto.response.DiaryNameListResponseDto;
-import com.woozuda.backend.diary.dto.response.DiaryNameResponseDto;
 import com.woozuda.backend.diary.service.DiaryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +26,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/diary")
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryController {
 
     private final DiaryService diaryService;
+
+    @GetMapping("/no-auth/{id}")
+    public ResponseEntity<DiaryListResponseDto> getDiaryListNoAuth(
+            @PathVariable("id") Long id
+    ) {
+        DiaryListResponseDto responseDto = diaryService.getDiaryListNoAuth(id);
+        return ResponseEntity.ok(responseDto);
+    }
 
     /*
     TODO 모든 컨트롤러에 @AuthenticationPrincipal CustomUser user, String username = user.getUsername()이 중복됨

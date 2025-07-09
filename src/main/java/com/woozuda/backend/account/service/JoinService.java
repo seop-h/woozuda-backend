@@ -3,11 +3,10 @@ package com.woozuda.backend.account.service;
 import com.woozuda.backend.account.dto.JoinDTO;
 import com.woozuda.backend.account.entity.UserEntity;
 import com.woozuda.backend.account.repository.UserRepository;
-import com.woozuda.backend.exception.InvalidEmailException;
-import com.woozuda.backend.exception.UsernameAlreadyExistsException;
+import com.woozuda.backend.exception.account.InvalidEmailException;
+import com.woozuda.backend.exception.account.UsernameAlreadyExistsException;
 import com.woozuda.backend.shortlink.util.ShortLinkUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +27,7 @@ public class JoinService {
     private final ShortLinkUtil shortLinkUtil;
 
     @Transactional
-    public void joinProcess(JoinDTO joinDTO){
+    public JoinDTO joinProcess(JoinDTO joinDTO){
 
         if(!isValidEmail(joinDTO.getUsername())){
             throw new InvalidEmailException("잘못된 이메일 형식을 입력 했습니다");
@@ -46,15 +45,15 @@ public class JoinService {
         UserEntity data = UserEntity.transEntity(joinDTO);
 
         //레포지터리에 entity를 저장합니다
-        userRepository.save(data);
+        UserEntity newUser = userRepository.save(data);
 
         // 유저에 대한 숏링크 제작
         shortLinkUtil.saveShortLink(data);
 
-
+        return JoinDTO.transDTO(newUser);
     }
 
-    public static boolean isValidEmail(String username){
+    public boolean isValidEmail(String username){
 
         // 이메일 주소 형식이 아닌 경우 false
         String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";

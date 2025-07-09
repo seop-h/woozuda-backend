@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,6 +24,7 @@ public class CreationWritingAnalysisService {
     private final ChatGptService chatGptService;
     private final ObjectMapper objectMapper;
     private final AiCreationService aiCreationService;
+
     public void analyze(List<NonRetroNoteEntryResponseDto> diaryList , String username) {
         if (diaryList == null || diaryList.isEmpty()) {
             throw new IllegalArgumentException("분석할 일기 데이터가 없습니다.");
@@ -46,9 +49,12 @@ public class CreationWritingAnalysisService {
                 당신은 분석 도우미입니다. 사용자의 일기를 분석하고 다음과 같은 정보를 제공하세요:
                 1. 일기를 읽고 창작으로 시를 간단하게 써주세요.
                 2. **중요** 분석이 불가능한 경우 비슷한 데이터라도 출력해주세요. 절대 Null 반환 금지
-                3. 위의 내용을 포함하여 각 항목처럼 반환해주세요. 예:
-                    image_url : 이미지를 url 을 반환해주세요.
-                    text : 줄바꿈(/n) 없이 창작한 시를 반환해주세요.
+                3. 시작날짜와 끝나는 날짜는 꼭 출력해주세요.
+                4. text 는 줄바꿈 없이 230 이하로 창착한 글을 출력해주세요.
+                5. 위의 내용을 포함하여 각 항목처럼 반환해주세요. 예:
+                    start_date :2024-12-01
+                    end_date :2024-12-31
+                    text : 오늘의 내 기분은 그렇게 좋지 않았다.
                 """;
         log.info("사용자 메시지 내용 Diary: {}", userMessage.toString());
 
@@ -75,21 +81,22 @@ public class CreationWritingAnalysisService {
             JsonNode contentNode = messageNode.path("content");
             String content = contentNode.asText();
 
-            LocalDate today = LocalDate.now();
-            LocalDate startDate = today.with(DayOfWeek.MONDAY); // 이번 주 월요일
-            LocalDate endDate = today.with(DayOfWeek.SUNDAY); // 이번 주 일요일
-
+            String startDate = extractValue(content, "start_date");
+            String endDate = extractValue(content, "end_date");
+            LocalDate start_date = convertStringToDate(startDate);
+            LocalDate end_date = convertStringToDate(endDate);
             // 항목 추출
             String creationType = "WRITING";
-            String image_url = extractValue(content, "image_url");
-            String text = extractValue(content, "text");
+            String img = extractValue(content, "text");
+            String text = img;
+
             String visibility = "PRIVATE";
             return new AiCreationDTO(
-                    startDate,
-                    endDate,
+                    start_date,
+                    end_date,
                     creationType,
-                    image_url,
                     text,
+                    img,
                     visibility,
                     username
             );
@@ -98,7 +105,18 @@ public class CreationWritingAnalysisService {
             throw new RuntimeException("응답 매핑 중 오류 발생: " + e.getMessage());
         }
     }
-
+    private LocalDate convertStringToDate(String date) {
+        if (date != null) {
+            date = date.replaceAll("\"", ""); // 따옴표 제거
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try {
+            return LocalDate.parse(date, formatter);
+        } catch (DateTimeParseException e) {
+            log.error("잘못된 날짜 형식: '{}'. 기본값을 사용합니다.", date);
+            return LocalDate.now(); // 기본값 설정
+        }
+    }
     private String extractValue(String content, String key) {
         if (content == null || content.isEmpty()) {
             log.warn("내용이 비어 있음: {}", key);

@@ -36,7 +36,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if (existData == null) {
 
-            UserEntity userEntity = new UserEntity(null, username, null, "ROLE_ADMIN", AiType.PICTURE_NOVEL, true, oAuth2Response.getEmail(), oAuth2Response.getProvider());
+            UserEntity userEntity = new UserEntity(null, username, null, "ROLE_USER", AiType.PICTURE_NOVEL, true, oAuth2Response.getEmail(), oAuth2Response.getProvider());
             userRepository.save(userEntity);
             shortLinkUtil.saveShortLink(userEntity);
             

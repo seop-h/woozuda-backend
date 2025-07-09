@@ -44,7 +44,8 @@ public class AiRecall_scs_AnalysisService {
                 당신은 분석 도우미입니다. 사용자의 회고 데이터를 분석하고 다음과 같은 정보를 제공하세요:
                  1. type 이 "SCS" 인 경우 SCS 을 정확히 출력해주세요.
                  2.**중요**절대 모든 값의 Null 및 0을 반환하지 마세요. 비슷한 분석 결과값을 반환해주세요.
-                 3. 위의 내용을 포함하여 각 항목을 객체 타입으로 한번만 반환해주세요. 예:
+                 3. 시작날짜와 끝나는 날짜는 꼭 출력해주세요. 
+                 4. 위의 내용을 포함하여 각 항목을 객체 타입으로 한번만 반환해주세요. 예:
                     start_date: 2024-12-01
                     end_date: 2024-12-31
                     type: SCS
@@ -86,9 +87,8 @@ public class AiRecall_scs_AnalysisService {
             /**
              * 날짜 변경
              */
-            LocalDate today = LocalDate.now();
-            LocalDate startDate = today.with(DayOfWeek.MONDAY); // 이번 주 월요일
-            LocalDate endDate = today.with(DayOfWeek.SUNDAY); // 이번 주 일요일
+            LocalDate startDate = convertStringToDate("start_date");
+            LocalDate endDate = convertStringToDate("end_date");
 
             /**
              * type 변경
@@ -135,6 +135,9 @@ public class AiRecall_scs_AnalysisService {
     }
 
     private LocalDate convertStringToDate(String date) {
+        if (date != null) {
+            date = date.replaceAll("\"", ""); // 따옴표 제거
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         try {
             return LocalDate.parse(date, formatter);

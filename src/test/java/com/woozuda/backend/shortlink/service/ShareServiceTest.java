@@ -12,6 +12,7 @@ import com.woozuda.backend.shortlink.dto.note.NoteIdDto;
 import com.woozuda.backend.shortlink.dto.note.SharedNoteResponseDto;
 import com.woozuda.backend.shortlink.entity.ShortLink;
 import com.woozuda.backend.shortlink.repository.ShortLinkRepository;
+import com.woozuda.backend.testutil.UserEntityBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.woozuda.backend.account.entity.AiType.PICTURE_NOVEL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,7 +75,16 @@ public class ShareServiceTest {
     void makeSharedNoteTest() throws Exception {
 
         //given - 데이터 넣기 (user 1명, diary 1개, question 1개 ,note 5개)
-        UserEntity user = new UserEntity(null, "woozuda@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "woozuda@gmail.com", "woozuda");
+
+        // before
+        // UserEntity user = new UserEntity(null, "woozuda@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "woozuda@gmail.com", "woozuda");
+
+        // after
+        UserEntity user = UserEntityBuilder.createUniqueUser()
+                                            .withPassword("1234")
+                                            .withEmail("woozuda@gmail.com")
+                                            .build();
+
         userRepository.save(user);
 
         Diary diary1 = Diary.of(user, "https://woozuda-image.kr.object.ncloudstorage.com/random-image-1.jpg", "my first diary");
@@ -122,13 +133,19 @@ public class ShareServiceTest {
     void getSharedNoteTest() throws Exception {
 
         //given - 데이터 넣기 (user 1명, diary 1개, question 1개 ,note 5개)
-        UserEntity user1 = new UserEntity(null, "woozuda@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "woozuda@gmail.com", "woozuda");
-        UserEntity user2 = new UserEntity(null, "rodom1018@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "rodom1018@gmail.com", "woozuda");
-        userRepository.save(user1);
-        userRepository.save(user2);
 
-        Diary diary1 = Diary.of(user1, "https://woozuda-image.kr.object.ncloudstorage.com/random-image-1.jpg", "my first diary");
-        Diary diary2 = Diary.of(user2, "https://woozuda-image.kr.object.ncloudstorage.com/random-image-1.jpg", "my first diary22");
+        //Before
+        //UserEntity user1 = new UserEntity(null, "woozuda@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "woozuda@gmail.com", "woozuda");
+        //UserEntity user2 = new UserEntity(null, "rodom1018@gmail.com", "1234", "ROLE_ADMIN", PICTURE_NOVEL, true, "rodom1018@gmail.com", "woozuda");
+        //userRepository.save(user1);
+        //userRepository.save(user2);
+
+        //after
+        List<UserEntity> userEntityList = UserEntityBuilder.createUniqueMultipleUser(10);
+        userRepository.saveAll(userEntityList);
+
+        Diary diary1 = Diary.of(userEntityList.get(0), "https://woozuda-image.kr.object.ncloudstorage.com/random-image-1.jpg", "my first diary");
+        Diary diary2 = Diary.of(userEntityList.get(1), "https://woozuda-image.kr.object.ncloudstorage.com/random-image-1.jpg", "my first diary22");
         diaryRepository.save(diary1);
         diaryRepository.save(diary2);
 

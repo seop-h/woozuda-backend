@@ -25,8 +25,8 @@ public class AiCreationRepositoryImpl implements AiCreationRepositoryCustom{
         AiCreation result = query
                 .selectFrom(aiCreation)
                 .join(aiCreation.user, userEntity)
-                .where(aiCreation.start_date.eq(start_date)  // 필드 이름을 실제 엔티티에 맞게 수정
-                        .and(aiCreation.end_date.eq(end_date))
+                .where(aiCreation.start_date.goe(start_date)  // 필드 이름을 실제 엔티티에 맞게 수정
+                        .and(aiCreation.end_date.loe(end_date))
                         .and(userEntity.username.eq(username)))
                 .fetchOne();
 

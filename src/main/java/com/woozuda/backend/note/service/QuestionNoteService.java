@@ -1,21 +1,23 @@
 package com.woozuda.backend.note.service;
 
+import com.woozuda.backend.alarm.service.AlarmService;
 import com.woozuda.backend.diary.dto.response.NoteIdResponseDto;
 import com.woozuda.backend.diary.entity.Diary;
 import com.woozuda.backend.diary.repository.DiaryRepository;
+import com.woozuda.backend.image.service.ImageService;
+import com.woozuda.backend.image.type.ImageType;
 import com.woozuda.backend.note.dto.request.QuestionNoteModifyRequestDto;
 import com.woozuda.backend.note.dto.request.QuestionNoteSaveRequestDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
-import com.woozuda.backend.note.entity.CommonNote;
 import com.woozuda.backend.note.entity.NoteContent;
-import com.woozuda.backend.note.entity.Question;
+import com.woozuda.backend.question.entity.Question;
 import com.woozuda.backend.note.entity.QuestionNote;
 import com.woozuda.backend.note.entity.type.Feeling;
 import com.woozuda.backend.note.entity.type.Season;
 import com.woozuda.backend.note.entity.type.Weather;
 import com.woozuda.backend.note.repository.NoteRepository;
 import com.woozuda.backend.note.repository.QuestionNoteRepository;
-import com.woozuda.backend.note.repository.QuestionRepository;
+import com.woozuda.backend.question.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,8 @@ public class QuestionNoteService {
     private final NoteRepository noteRepository;
     private final DiaryRepository diaryRepository;
     private final QuestionRepository questionRepository;
+    private final AlarmService alarmService;
+    private final ImageService imageService;
 
     public NoteIdResponseDto saveQuestionNote(String username, QuestionNoteSaveRequestDto requestDto) {
         Diary foundDiary = diaryRepository.searchDiary(requestDto.getDiaryId(), username);
@@ -57,7 +61,13 @@ public class QuestionNoteService {
         NoteContent noteContent = NoteContent.of(1, requestDto.getContent());
         savedQuestionNote.addContent(noteContent);
 
-        foundDiary.addNote(savedQuestionNote.getDate());
+//        foundDiary.addNote(savedQuestionNote.getDate());
+
+        // 이번에 저장한 질문일기가 그 주의 3번째 일기라면(자유일기 + 질문일기 기준), 알람을 발생합니다.
+        alarmService.threePostAlarm(username, requestDto.getDate());
+
+        // 이미지 테이블 반영 (질문 일기 생성 후)
+        imageService.afterCreate(ImageType.NOTE, savedQuestionNote.getId(), requestDto.getContent());
 
         return NoteIdResponseDto.of(savedQuestionNote.getId());
     }
@@ -85,6 +95,9 @@ public class QuestionNoteService {
                 LocalDate.parse(requestDto.getDate()),
                 requestDto.getContent()
         );
+
+        // 이미지 테이블 반영 (질문 일기 변경 후)
+        imageService.afterUpdate(ImageType.NOTE, noteId, requestDto.getContent());
 
         return NoteIdResponseDto.of(foundNote.getId());
     }

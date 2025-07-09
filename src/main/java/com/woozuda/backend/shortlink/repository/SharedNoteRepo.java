@@ -14,4 +14,5 @@ public interface SharedNoteRepo {
 
     List<String> searchNoteContent(Note note);
 
+    Long noteCountToMakeReport(String username, String date);
 }

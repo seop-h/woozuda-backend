@@ -12,7 +12,7 @@ spring:
 
 
   jwt:
-    secret: jwthascode111
+    secret: samplejwtsecret=samplejwtsecret=samplejwtsecret
 
   security:
     oauth2:
@@ -59,11 +59,31 @@ ncp:
     accessKey: "access_key"
     secretKey: "secret_key"
     bucketName : "bucket_name"
+  clova-studio:
+    question-creator:
+      url: "question_creator_url"
+      api-key: "question_creator_api_key"
+      apigw-key: "question_creator_apigw_key"
+
+
+clova:
+  api:
+    key: "clova.api.key"
+    url: "clova.api.url"
+    rid: "clova.api.rid"
 
 openai:
   api:
     key: "api_key"  # 환경 변수에서 OPENAI_API_KEY를 가져옵니다.
+    url: "api.url"
   chat:
     options:
       model: "gpt-3.5-turbo"  # 사용할 AI 모델 (예: gpt-3.5-turbo)
       temperature: 0.6  # 생성되는 텍스트의 다양성 정도를 조절하는 파라미터 (0.0 ~ 1.0)
+
+allow-ips:
+  127.0.0.1,
+  0:0:0:0:0:0:0:1
+  
+aes:
+  password: "aes_password"

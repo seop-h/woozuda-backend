@@ -1,6 +1,7 @@
 package com.woozuda.backend.security.config;
 
 import com.woozuda.backend.account.service.CustomOAuth2UserService;
+import com.woozuda.backend.security.jwt.IPCheckFilter;
 import com.woozuda.backend.security.jwt.JWTFilter;
 import com.woozuda.backend.security.jwt.JWTUtil;
 import com.woozuda.backend.security.jwt.LoginFilter;
@@ -8,8 +9,10 @@ import com.woozuda.backend.security.oauth2.CustomAuthenticationEntryPoint;
 import com.woozuda.backend.security.oauth2.CustomSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,6 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -46,6 +50,9 @@ public class SecurityConfig {
 
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+    @Value("${allow-ips}")
+    private List<String> adminIps;
+
     //AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -59,9 +66,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
+    // 필터 공통 설정
+    private void configureCommon(HttpSecurity http) throws Exception {
         //csrf, formlogin, httpbasic 필터를 비활성화
         http
                 .csrf((auth) -> auth.disable())
@@ -75,30 +81,9 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
                 );
-
-        //경로별 인가 작업
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join", "/error", "/account/sample/alluser", "/favicon.ico", "/api/shortlink/note/**", "/api/shortlink/ai/**", "/actuator/**").permitAll()
-                        .requestMatchers("/account/sample/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated());
-
         http
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(customAuthenticationEntryPoint));
-
-        //UserNamePasswordAuthenticationFilter 자리에 커스텀 하게 만든 LoginFilter를 실행한다.
-        //jwt 방식으로 구현하다 보니 , form login 을 비활성화했고, UserNamePasswordAuthenticationFilter 도 비활성화 되었음 (그래서 커스텀 구현이 필요)
-        http
-                //.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
-                //.addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class)
-                //.addFilterAfter(new JWTFilter(jwtUtil), BasicAuthenticationFilter.class)
-                //.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), BasicAuthenticationFilter.class);
-                .addFilterAfter(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
-        //.addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class)
-        //.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), OAuth2LoginAuthenticationFilter.class);
-
 
         //stateless 세션 설정
         http
@@ -108,6 +93,53 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors
                         .configurationSource(corsConfigurationSource()));
+
+    }
+    @Bean
+    @Order(1)
+    public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
+
+        configureCommon(http);
+
+        // /account/sample/admin 에 해당되는 api만 해당 filter chain 이 돌도록 함
+        http
+                .securityMatcher("/account/sample/admin");
+
+        //경로별 인가 작업
+        http
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/account/sample/admin").hasRole("ADMIN")
+                        .anyRequest().authenticated());
+
+        //UserNamePasswordAuthenticationFilter 자리에 커스텀 하게 만든 LoginFilter를 실행한다.
+        //jwt 방식으로 구현하다 보니 , form login 을 비활성화했고, UserNamePasswordAuthenticationFilter 도 비활성화 되었음 (그래서 커스텀 구현이 필요)
+        http
+                .addFilterAfter(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new IPCheckFilter(adminIps), JWTFilter.class);
+
+
+        return http.build();
+
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
+
+        configureCommon(http);
+
+        //경로별 인가 작업
+        http
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/login", "/", "/join", "/error", "/account/sample/alluser", "/favicon.ico", "/api/shortlink/note/**", "/api/shortlink/ai/**", "/actuator/**", "/health", "/api/diary/no-auth/**").permitAll()
+                        .anyRequest().authenticated());
+
+        //UserNamePasswordAuthenticationFilter 자리에 커스텀 하게 만든 LoginFilter를 실행한다.
+        //jwt 방식으로 구현하다 보니 , form login 을 비활성화했고, UserNamePasswordAuthenticationFilter 도 비활성화 되었음 (그래서 커스텀 구현이 필요)
+        http
+                .addFilterAfter(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
 
         return http.build();

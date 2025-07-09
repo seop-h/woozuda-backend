@@ -23,8 +23,8 @@ public class AiDiaryRepositoryImpl implements AiDiaryRepositoryCustom {
         AiDiary result = query
                 .selectFrom(aiDiary)
                 .join(aiDiary.user, userEntity)
-                .where(aiDiary.start_date.eq(start_date)  // 필드 이름을 실제 엔티티에 맞게 수정
-                        .and(aiDiary.end_date.eq(end_date))
+                .where(aiDiary.start_date.goe(start_date)  // 필드 이름을 실제 엔티티에 맞게 수정
+                        .and(aiDiary.end_date.loe(end_date))
                         .and(userEntity.username.eq(username)))
                 .fetchOne();
 

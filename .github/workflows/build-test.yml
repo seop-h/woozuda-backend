@@ -42,21 +42,7 @@ jobs:
           ./gradlew clean build
         shell: bash
 
-      # 5. 빌드 성공 시 코멘트
-      - name: Comment on PR if Build Succeed
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo, number } = context.issue;
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: number,
-              body: `✅ 빌드 테스트가 성공적으로 완료되었습니다!`
-            });
-
-      # 6. 빌드 실패 시 코멘트
+      # 5. 빌드 실패 시 코멘트
       - name: Comment on PR if Build Fail
         if: failure()
         uses: actions/github-script@v7

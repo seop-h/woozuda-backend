@@ -41,7 +41,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         ResponseCookie responseCookie = createCookie("Authorization", token);
         response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
-        response.sendRedirect("https://woozuda.swygbro.com/home");
+        response.sendRedirect("https://woozuda.swygbro.com");
         //response.addCookie(createCookie("Authorization", token));
     }
 

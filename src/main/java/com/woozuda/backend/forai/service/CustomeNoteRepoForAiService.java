@@ -2,7 +2,6 @@ package com.woozuda.backend.forai.service;
 
 import com.woozuda.backend.account.entity.UserEntity;
 import com.woozuda.backend.account.repository.UserRepository;
-import com.woozuda.backend.forai.dto.CountRecallDto;
 import com.woozuda.backend.forai.repository.CustomNoteRepoForAi;
 import com.woozuda.backend.forai.dto.NonRetroNoteEntryResponseDto;
 import com.woozuda.backend.forai.dto.RetroNoteEntryResponseDto;
