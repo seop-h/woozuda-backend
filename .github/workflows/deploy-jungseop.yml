@@ -3,7 +3,7 @@ name: Deploy to Test Environment
 on:
   push:
     branches:
-      - jungseop
+      - main
 
 env:
   IMAGE_TAG: latest

@@ -35,6 +35,7 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponseDto> getDiaryListNoAuth(
             @PathVariable("id") Long id
     ) {
+
         DiaryListResponseDto responseDto = diaryService.getDiaryListNoAuth(id);
         return ResponseEntity.ok(responseDto);
     }
