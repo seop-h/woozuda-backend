@@ -39,9 +39,6 @@ public class SingleDiaryResponseDto {
     }
 
     public static SingleDiaryResponseDto from(Diary diary) {
-        List<Note> noteList = diary.getNoteList();
-        noteList.sort(Comparator.comparing(Note::getDate).reversed());
-
         List<String> tagNames = diary.getTagList().stream()
                 .map(diaryTag -> diaryTag.getTag().getName())
                 .toList();
@@ -51,9 +48,9 @@ public class SingleDiaryResponseDto {
                 diary.getTitle(),
                 tagNames,
                 diary.getImage(),
-                !noteList.isEmpty() ? noteList.getFirst().getDate() : null,
-                !noteList.isEmpty() ? noteList.getLast().getDate() : null,
-                noteList.size()
+                diary.getStartDate(),
+                diary.getEndDate(),
+                diary.getNoteCount()
         );
     }
 }

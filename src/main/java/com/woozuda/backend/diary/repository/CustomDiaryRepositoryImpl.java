@@ -36,11 +36,22 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
     @Override
     public List<Diary> searchDiarySummaryList(Long id) {
         // 1. 다이어리 기본 정보와 노트 집계 정보 조회
+        /*
         List<Diary> diaryList = query
                 .selectFrom(diary)
                 .join(diary.user, userEntity)
                 .where(userEntity.id.eq(id))
                 .fetch();
+                */
+        List<Diary> diaryList = query
+                .selectFrom(diary)
+                .join(diary.user, userEntity)
+                .leftJoin(diary.tagList, diaryTag).fetchJoin()
+                .leftJoin(diaryTag.tag, tag).fetchJoin()
+                .where(userEntity.id.eq(id))
+                .orderBy(diary.createdAt.desc())
+                .fetch();
+
 
         return diaryList;
 
@@ -241,10 +252,10 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
                                         list(
                                                 tag.name
                                         ),
-                                        diary.image
-//                                        diary.startDate,
-//                                        diary.endDate,
-//                                        diary.noteCount
+                                        diary.image,
+                                        diary.startDate,
+                                        diary.endDate,
+                                        diary.noteCount
                                 )
                         )
                 )

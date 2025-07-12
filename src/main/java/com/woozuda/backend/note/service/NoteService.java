@@ -2,6 +2,7 @@ package com.woozuda.backend.note.service;
 
 import com.woozuda.backend.diary.entity.Diary;
 import com.woozuda.backend.diary.repository.DiaryRepository;
+import com.woozuda.backend.event.event.NoteDeletedEvent;
 import com.woozuda.backend.image.service.ImageService;
 import com.woozuda.backend.image.type.ImageType;
 import com.woozuda.backend.note.dto.request.NoteCondRequestDto;
@@ -11,9 +12,12 @@ import com.woozuda.backend.note.dto.response.DateListResponseDto;
 import com.woozuda.backend.note.dto.response.NoteCountResponseDto;
 import com.woozuda.backend.note.dto.response.NoteEntryResponseDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
+import com.woozuda.backend.note.entity.Note;
 import com.woozuda.backend.note.repository.NoteRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +28,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -36,6 +41,8 @@ public class NoteService {
     private final NoteRepository noteRepository;
     private final DiaryRepository diaryRepository;
     private final ImageService imageService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 최신순 일기 조회
@@ -117,6 +124,28 @@ public class NoteService {
             imageService.afterDelete(ImageType.NOTE, deleteNoteId);
         }
 
+    }
+
+    public void deleteNote(String username, Long noteId) {
+        // 노트 조회 및 권한 확인
+        Note note = noteRepository.findWithRelatedById(noteId)
+                .orElseThrow(() -> new EntityNotFoundException("Note not found"));
+
+        // 해당 노트가 사용자의 것인지 확인
+        if (!note.getDiary().getUser().getUsername().equals(username)) {
+            throw new IllegalArgumentException("This note does not belong to the user.");
+        }
+
+        // 노트 삭제
+        noteRepository.delete(note);
+
+        // 이벤트 발행
+        eventPublisher.publishEvent(
+                new NoteDeletedEvent(note)
+        );
+
+        // 이미지 테이블에서 관련 이미지 정보 삭제
+        imageService.afterDelete(ImageType.NOTE, noteId);
     }
 
     public NoteCountResponseDto getNoteCount(String username, LocalDate startDate, LocalDate endDate) {

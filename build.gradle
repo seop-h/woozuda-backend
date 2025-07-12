@@ -102,6 +102,9 @@ dependencies {
 	//AWS Parameter Store
 	implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.2.1")
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
+
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {

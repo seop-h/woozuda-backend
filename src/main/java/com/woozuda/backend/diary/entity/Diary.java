@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 //TODO 같은 사용자 내 다이어리 이름 중복 X
 @Entity
@@ -50,12 +51,12 @@ public class Diary extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-//    private LocalDate startDate;
+    private LocalDate startDate;
 
-//    private LocalDate endDate;
+    private LocalDate endDate;
 
-//    @Column(nullable = false)
-//    private Integer noteCount;
+    @Column(nullable = false)
+    private Integer noteCount;
 
     @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("date ASC")
@@ -68,11 +69,21 @@ public class Diary extends BaseTimeEntity {
         this.user = user;
         this.image = image;
         this.title = title;
-//        this.noteCount = 0;
+        this.noteCount = 0;
     }
 
     public static Diary of(UserEntity user, String image, String title) {
         return new Diary(user, image, title);
+    }
+
+    //테스트용(임시)
+    public Diary(UserEntity user, String image, String title, LocalDate startDate, LocalDate endDate, Integer noteCount) {
+        this.user = user;
+        this.image = image;
+        this.title = title;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.noteCount = noteCount;
     }
 
     public void addTag(Tag tag) {
@@ -88,6 +99,42 @@ public class Diary extends BaseTimeEntity {
             addTag(tag);
         }
         this.image = imgUrl;
+    }
+
+    public void removeNote(Note note) {
+        this.noteList.remove(note);
+        note.setDiary(null);
+    }
+
+    public void updateAfterAddNote(LocalDate newNoteDate) {
+        if (this.startDate == null || newNoteDate.isBefore(this.startDate)) {
+            this.startDate = newNoteDate;
+        }
+        if (this.endDate == null || newNoteDate.isAfter(this.endDate)) {
+            this.endDate = newNoteDate;
+        }
+        this.noteCount++;
+    }
+
+    public void updateAfterDeleteNote(Note deletingNote) {
+        removeNote(deletingNote);
+
+        if (this.startDate.isEqual(deletingNote.getDate()) || this.endDate.isEqual(deletingNote.getDate())) {
+            List<LocalDate> noteDates = noteList.stream()
+                    .filter(note -> !note.getId().equals(deletingNote.getId()))
+                    .map(Note::getDate)
+                    .sorted()
+                    .toList();
+
+            if (noteDates.isEmpty()) {
+                this.startDate = null;
+                this.endDate = null;
+            } else {
+                this.startDate = noteDates.getFirst();
+                this.endDate = noteDates.getLast();
+            }
+        }
+        this.noteCount--;
     }
 
     /*public void addNote(LocalDate noteDate) {
