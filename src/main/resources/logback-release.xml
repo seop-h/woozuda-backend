@@ -88,8 +88,8 @@
 <!--    </logger>-->
 
     <!-- HikariCP HouseKeeper 로거 -->
-    <logger name="com.zaxxer.hikari.pool.HikariPool" level="DEBUG" additivity="false">
-        <appender-ref ref="DEBUG_LOG"/>
-    </logger>
+<!--    <logger name="com.zaxxer.hikari.pool.HikariPool" level="DEBUG" additivity="false">-->
+<!--        <appender-ref ref="DEBUG_LOG"/>-->
+<!--    </logger>-->
 
 </configuration>
