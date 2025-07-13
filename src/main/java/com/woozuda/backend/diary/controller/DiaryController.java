@@ -80,6 +80,15 @@ public class DiaryController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @GetMapping("/no-auth/details/{diaryId}")
+    public ResponseEntity<DiaryDetailResponseDto> getDiaryDetailNoAuth(
+            @PathVariable("diaryId") Long diaryId,
+            @PageableDefault Pageable pageable
+    ) {
+        DiaryDetailResponseDto responseDto = diaryService.getOneDiaryNoAuth(diaryId, pageable);
+        return ResponseEntity.ok(responseDto);
+    }
+
 
     @PatchMapping("/{diaryId}")
     public ResponseEntity<DiaryIdResponseDto> modifyDiary(

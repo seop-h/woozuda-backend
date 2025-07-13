@@ -263,6 +263,32 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
     }
 
     @Override
+    public SingleDiaryResponseDto searchSingleDiarySummary(Long diaryId) {
+        return query
+                .from(diary)
+                .join(diary.user, userEntity)
+                .leftJoin(diary.tagList, diaryTag)
+                .leftJoin(diaryTag.tag, tag)
+                .where(diary.id.eq(diaryId))
+                .transform(
+                        groupBy(diary.id).list(
+                                Projections.constructor(SingleDiaryResponseDto.class,
+                                        diary.id,
+                                        diary.title,
+                                        list(
+                                                tag.name
+                                        ),
+                                        diary.image,
+                                        diary.startDate,
+                                        diary.endDate,
+                                        diary.noteCount
+                                )
+                        )
+                )
+                .getFirst();
+    }
+
+    @Override
     public List<Long> searchDiaryIdList(String username) {
         return query
                 .select(diary.id)

@@ -107,6 +107,38 @@ public class DiaryService {
         return DiaryDetailResponseDto.of(diarySummary, page);
     }
 
+    @Transactional(readOnly = true)
+    public DiaryDetailResponseDto getOneDiaryNoAuth(Long diaryId, Pageable pageable) {
+        SingleDiaryResponseDto diarySummary = diaryRepository.searchSingleDiarySummary(diaryId);
+
+        List<NoteResponseDto> commonNoteDtoList = noteRepository.searchCommonNoteList(List.of(diaryId), new NoteCondRequestDto());
+        List<NoteResponseDto> questionNoteDtoList = noteRepository.searchQuestionNoteList(List.of(diaryId), new NoteCondRequestDto());
+        List<NoteResponseDto> retrospectiveNoteDtoList = noteRepository.searchRetrospectiveNoteList(List.of(diaryId), new NoteCondRequestDto());
+
+        List<NoteEntryResponseDto> allContent = Stream.of(
+                        commonNoteDtoList.stream()
+                                .map(noteResponseDto -> new NoteEntryResponseDto("COMMON", noteResponseDto.convertEnum())),
+                        questionNoteDtoList.stream()
+                                .map(noteResponseDto -> new NoteEntryResponseDto("QUESTION", noteResponseDto.convertEnum())),
+                        retrospectiveNoteDtoList.stream()
+                                .map(noteResponseDto -> new NoteEntryResponseDto("RETROSPECTIVE", noteResponseDto.convertEnum()))
+                ).flatMap(stream -> stream)
+                .sorted(Comparator.naturalOrder())
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allContent.size());
+
+        Page<NoteEntryResponseDto> page;
+        if (start > end) {
+            page = new PageImpl<>(Collections.emptyList(), pageable, allContent.size());
+        } else {
+            page = new PageImpl<>(allContent.subList(start, end), pageable, allContent.size());
+        }
+
+        return DiaryDetailResponseDto.of(diarySummary, page);
+    }
+
     public DiaryIdResponseDto saveDiary(String username, DiarySaveRequestDto requestDto) {
         UserEntity foundUser = userRepository.findByUsername(username);
         Diary diary = Diary.of(foundUser, requestDto.getImgUrl(), requestDto.getTitle());

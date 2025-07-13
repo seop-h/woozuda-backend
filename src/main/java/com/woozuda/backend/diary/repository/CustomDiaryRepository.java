@@ -15,6 +15,8 @@ public interface CustomDiaryRepository {
 
     SingleDiaryResponseDto searchSingleDiarySummary(String username, Long diaryId);
 
+    SingleDiaryResponseDto searchSingleDiarySummary(Long diaryId);
+
     List<Long> searchDiaryIdList(String username);
 
     Diary searchDiary(Long diaryId, String username);
