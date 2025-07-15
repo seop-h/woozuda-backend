@@ -2,9 +2,9 @@ FROM openjdk:21-jdk
 ARG JAR_FILE=build/libs/*SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
-ENV SERVER_PORT=8080
-ENV SPRING_PROFILE=release
-ENV LOG_PATH_PREFIX=/log
+#ENV SERVER_PORT=8080
+#ENV SPRING_PROFILE=release
+#ENV LOG_PATH_PREFIX=/log
 
 # GC 로그
 #-Xlog:gc*,safepoint:file=$LOG_PATH_PREFIX/gc/gc_%p.log:time,uptime,level,tags:filecount=10,filesize=20M \
@@ -17,6 +17,6 @@ ENV LOG_PATH_PREFIX=/log
 #-Djava.rmi.server.hostname=127.0.0.1 \
 ENTRYPOINT ["java", \
 "-Xms256m", "-Xmx512m", \
-"-Xlog:gc*,safepoint:file=${LOG_PATH_PREFIX}/gc/gc_%p.log:time,uptime,level,tags:filecount=10,filesize=20M", \
-"-Dserver.port=${SERVER_PORT}", "-Dspring.profiles.active=${SPRING_PROFILE}", \
-"-jar", "/app.jar", ">", "${LOG_PATH_PREFIX}/app.log", "2>&1"]
+"-Xlog:gc*,safepoint:file=/log/gc/gc_%p.log:time,uptime,level,tags:filecount=10,filesize=20M", \
+"-Dserver.port=8080", "-Dspring.profiles.active=release", \
+"-jar", "/app.jar", ">", "/log/app.log", "2>&1"]
