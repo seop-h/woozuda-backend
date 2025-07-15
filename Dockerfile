@@ -16,8 +16,8 @@ ENV LOG_PATH_PREFIX=/log
 #-Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false \
 #-Djava.rmi.server.hostname=127.0.0.1 \
 ENTRYPOINT ["sh","-c", "\
-  mkdir -p $LOG_PATH_PREFIX/gc && \
-  exec java -Xms256m -Xmx512m \
-  -Xlog:gc*,safepoint:file=$LOG_PATH_PREFIX/gc/gc_%p.log:time,uptime,level,tags:filecount=10,filesize=20M \
-  -Dserver.port=$SERVER_PORT -Dspring.profiles.active=$SPRING_PROFILE \
-  -jar /app.jar > $LOG_PATH_PREFIX/app.log 2>&1" ]
+mkdir -p $LOG_PATH_PREFIX/gc && \
+exec java -Xms256m -Xmx512m \
+-Xlog:gc*,safepoint:file=$LOG_PATH_PREFIX/gc/gc_%p.log:time,uptime,level,tags:filecount=10,filesize=20M \
+-Dserver.port=$SERVER_PORT -Dspring.profiles.active=$SPRING_PROFILE \
+-jar /app.jar > $LOG_PATH_PREFIX/app.log 2>&1" ]
