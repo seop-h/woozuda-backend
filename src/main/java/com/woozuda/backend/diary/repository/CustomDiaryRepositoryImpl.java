@@ -34,7 +34,27 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
     }
 
     @Override
-    public List<Diary> searchDiarySummaryList(Long id) {
+    public List<SingleDiaryResponseDto> searchDiarySummaryList(Long id) {
+        return query
+                .from(diary)
+                .join(diary.user, userEntity)
+                .leftJoin(diary.tagList, diaryTag)
+                .leftJoin(diaryTag.tag, tag)
+                .where(userEntity.id.eq(id))
+                .orderBy(diary.createdAt.desc())
+                .transform(
+                        groupBy(diary.id).list(
+                                Projections.constructor(SingleDiaryResponseDto.class,
+                                        diary.id,
+                                        diary.title,
+                                        list(tag.name),
+                                        diary.image,
+                                        diary.startDate,
+                                        diary.endDate,
+                                        diary.noteCount
+                                )
+                        )
+                );
         // 1. 다이어리 기본 정보와 노트 집계 정보 조회
         /*
         List<Diary> diaryList = query
@@ -43,6 +63,8 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
                 .where(userEntity.id.eq(id))
                 .fetch();
                 */
+
+        /*
         List<Diary> diaryList = query
                 .selectFrom(diary)
                 .join(diary.user, userEntity)
@@ -54,6 +76,7 @@ public class CustomDiaryRepositoryImpl implements CustomDiaryRepository {
 
 
         return diaryList;
+        */
 
         /*
         List<SingleDiaryResponseDto> result = new ArrayList<>();
