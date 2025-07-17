@@ -47,15 +47,14 @@ public class DiaryService {
 
     @Transactional(readOnly = true)
     public DiaryListResponseDto getDiaryListNoAuth(Long id) {
-        List<SingleDiaryResponseDto> diaryList = diaryRepository.searchDiarySummaryList(id);
-        return new DiaryListResponseDto(diaryList);
+        List<Diary> diaryList = diaryRepository.searchDiarySummaryList(id);
 
-//        List<SingleDiaryResponseDto> result = new ArrayList<>();
-//        for (Diary aDiary : diaryList) {
-//            result.add(SingleDiaryResponseDto.from(aDiary));
-//        }
-//
-//        return new DiaryListResponseDto(result);
+        List<SingleDiaryResponseDto> result = new ArrayList<>();
+        for (Diary aDiary : diaryList) {
+            result.add(SingleDiaryResponseDto.from(aDiary));
+        }
+
+        return new DiaryListResponseDto(result);
     }
 
     /*@Cacheable(
