@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -67,6 +66,20 @@ public class NoteResponseDto {
         this.content = content;
     }
 
+    @QueryProjection
+    public NoteResponseDto(Long id, Long diaryId, String diary, String title, String date, String weather, String season, String feeling, String question, String framework, List<String> content) {
+        this.id = id;
+        this.diaryId = diaryId;
+        this.diary = diary;
+        this.title = title;
+        this.date = date;
+        this.weather = weather;
+        this.season = season;
+        this.feeling = feeling;
+        this.question = question;
+        this.framework = framework;
+        this.content = content;
+    }
 
     //TODO DTO가 도메인에 의존 -> 리팩토링
     public NoteResponseDto convertEnum() {

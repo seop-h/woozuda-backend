@@ -1,20 +1,15 @@
 package com.woozuda.backend.note.repository;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.woozuda.backend.note.dto.request.NoteCondRequestDto;
 import com.woozuda.backend.note.dto.response.DateInfoResponseDto;
-import com.woozuda.backend.note.dto.response.DateListResponseDto;
 import com.woozuda.backend.note.dto.response.NoteCountResponseDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
 import com.woozuda.backend.note.dto.response.QNoteResponseDto;
-import com.woozuda.backend.note.entity.Note;
 import jakarta.persistence.EntityManager;
 
 import java.time.LocalDate;
@@ -29,7 +24,6 @@ import static com.woozuda.backend.note.entity.QNoteContent.noteContent;
 import static com.woozuda.backend.note.entity.QQuestionNote.questionNote;
 import static com.woozuda.backend.note.entity.QRetrospectiveNote.retrospectiveNote;
 import static com.woozuda.backend.question.entity.QQuestion.question;
-import static java.lang.Long.sum;
 
 /**
  * TODO 성능 생각하지 않음. 기능 완성한 뒤에는 성능 향상시킬 것

@@ -1,5 +1,6 @@
 package com.woozuda.backend.note.dto.response;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class NoteEntryResponseDto implements Comparable<NoteEntryResponseDto> {
      * @param type 노트 종료 (대문자)
      * @param note
      */
+    @QueryProjection
     public NoteEntryResponseDto(String type, NoteResponseDto note) {
         this.type = type.toLowerCase(Locale.ROOT);
         this.note = note;

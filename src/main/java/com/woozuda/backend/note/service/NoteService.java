@@ -28,8 +28,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -79,6 +77,22 @@ public class NoteService {
                 ).flatMap(stream -> stream)
                 .sorted(Comparator.naturalOrder())
                 .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allContent.size());
+
+        if (start > end) {
+            return new PageImpl<>(Collections.emptyList(), pageable, allContent.size());
+        } else {
+            return new PageImpl<>(allContent.subList(start, end), pageable, allContent.size());
+        }
+    }
+
+    //TODO weather, season, feeling이 영어로 출력되는 거 한글로 변경
+    @Transactional(readOnly = true)
+    public Page<NoteEntryResponseDto> getNoteListWithCaseQuery(String username, Pageable pageable, NoteCondRequestDto condition) {
+        List<NoteEntryResponseDto> allContent = noteRepository.searchNoteListWithCaseQuery(username, condition);
+        allContent.sort(Comparator.naturalOrder());
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), allContent.size());
