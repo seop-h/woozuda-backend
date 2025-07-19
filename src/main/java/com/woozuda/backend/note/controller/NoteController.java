@@ -40,8 +40,8 @@ public class NoteController {
         String username = user.getUsername();
 
         //최신순 or 날짜순 일기 조회
-//        Page<NoteEntryResponseDto> page = noteService.getNoteList(username, pageable, condition);
-        Page<NoteEntryResponseDto> page = noteService.getNoteListWithCaseQuery(username, pageable, condition);
+        Page<NoteEntryResponseDto> page = noteService.getNoteList(username, pageable, condition);
+//        Page<NoteEntryResponseDto> page = noteService.getNoteListWithCaseQuery(username, pageable, condition);
 
         return ResponseEntity.ok(page);
     }
