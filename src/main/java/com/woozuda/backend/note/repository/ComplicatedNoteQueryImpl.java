@@ -2,6 +2,7 @@ package com.woozuda.backend.note.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -58,7 +59,14 @@ public class ComplicatedNoteQueryImpl implements ComplicatedNoteQuery {
                             .join(userSub).on(diarySub.user.id.eq(userSub.id))
                         .where(userSub.username.eq(username))
                 ))
-                .orderBy(note.id.asc(), noteContent.noteOrder.asc())
+                .orderBy(note.date.desc(),
+                        Expressions.numberTemplate(
+                            Integer.class,
+                            "FIELD({0}, 'COMMON','QUESTION','RETROSPECTIVE')",
+                            note.dtype
+                        ).asc(),
+                        note.id.asc(),
+                        noteContent.noteOrder.asc())
                 .transform(
                         groupBy(note.id).list(
                                 new QNoteEntryResponseDto(
