@@ -12,6 +12,7 @@ import com.woozuda.backend.note.dto.response.DateListResponseDto;
 import com.woozuda.backend.note.dto.response.NoteCountResponseDto;
 import com.woozuda.backend.note.dto.response.NoteEntryResponseDto;
 import com.woozuda.backend.note.dto.response.NoteResponseDto;
+import com.woozuda.backend.note.dto.response.NoteResponseRepoDtoInterface;
 import com.woozuda.backend.note.entity.Note;
 import com.woozuda.backend.note.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -90,9 +92,41 @@ public class NoteService {
 
     //TODO weather, season, feeling이 영어로 출력되는 거 한글로 변경
     @Transactional(readOnly = true)
-    public Page<NoteEntryResponseDto> getNoteListWithCaseQuery(String username, Pageable pageable, NoteCondRequestDto condition) {
-        List<NoteEntryResponseDto> allContent = noteRepository.searchNoteListWithCaseQuery(username, condition);
-        allContent.sort(Comparator.naturalOrder());
+    public Page<NoteEntryResponseDto> getNoteListWithJoin(String username, Pageable pageable, NoteCondRequestDto condition) {
+        List<NoteResponseRepoDtoInterface> repoDtoList = noteRepository.searchNoteListWithJoin(username);
+
+        List<NoteEntryResponseDto> allContent = new ArrayList<>();
+        for (NoteResponseRepoDtoInterface repoDto : repoDtoList) {
+            if (!allContent.isEmpty()
+                    && allContent.getLast().getNote().getId().equals(repoDto.getNoteId())) {
+                allContent.getLast().getNote().addContent(repoDto.getContent());
+            } else {
+                allContent.add(new NoteEntryResponseDto(repoDto.getType(), NoteResponseDto.from(repoDto)));
+            }
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allContent.size());
+
+        if (start > end) {
+            return new PageImpl<>(Collections.emptyList(), pageable, allContent.size());
+        } else {
+            return new PageImpl<>(allContent.subList(start, end), pageable, allContent.size());
+        }
+    }
+
+    public Page<NoteEntryResponseDto> getNoteListWithUnionAll(String username, Pageable pageable, NoteCondRequestDto condition) {
+        List<NoteResponseRepoDtoInterface> repoDtoList = noteRepository.searchNoteListWithUnionAll(username);
+
+        List<NoteEntryResponseDto> allContent = new ArrayList<>();
+        for (NoteResponseRepoDtoInterface repoDto : repoDtoList) {
+            if (!allContent.isEmpty()
+                    && allContent.getLast().getNote().getId().equals(repoDto.getNoteId())) {
+                allContent.getLast().getNote().addContent(repoDto.getContent());
+            } else {
+                allContent.add(new NoteEntryResponseDto(repoDto.getType(), NoteResponseDto.from(repoDto)));
+            }
+        }
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), allContent.size());

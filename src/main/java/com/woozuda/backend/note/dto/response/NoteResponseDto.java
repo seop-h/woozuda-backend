@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
@@ -81,7 +82,27 @@ public class NoteResponseDto {
         this.content = content;
     }
 
+    public static NoteResponseDto from(NoteResponseRepoDtoInterface repoDto) {
+        return new NoteResponseDto(
+                repoDto.getNoteId(),
+                repoDto.getDiaryId(),
+                repoDto.getDiaryTitle(),
+                repoDto.getNoteTitle(),
+                repoDto.getDate() != null ?  repoDto.getDate().toString() : null,
+                repoDto.getWeather() != null ? repoDto.getWeather().getName() : null,
+                repoDto.getSeason() != null ? repoDto.getSeason().getName() : null,
+                repoDto.getFeeling() != null ? repoDto.getFeeling().getName() : null,
+                repoDto.getQuestion(),
+                repoDto.getFramework() != null ? repoDto.getFramework().name() : null,
+                new ArrayList<>(List.of(repoDto.getContent()))
+        );
+    }
+
+    public void addContent(String content) {
+        this.content.add(content);
+    }
     //TODO DTO가 도메인에 의존 -> 리팩토링
+
     public NoteResponseDto convertEnum() {
         if (this.weather != null) {
             this.weather = Weather.fromValue(this.weather);

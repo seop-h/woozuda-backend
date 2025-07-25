@@ -45,7 +45,7 @@ public class NoteController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/case-when")
+    @GetMapping("/join")
     public ResponseEntity<Page<NoteEntryResponseDto>> getNoteListPageWithCaseWhen(
             @AuthenticationPrincipal CustomUser user,
             @PageableDefault Pageable pageable,
@@ -54,7 +54,21 @@ public class NoteController {
         String username = user.getUsername();
 
         //최신순 or 날짜순 일기 조회
-        Page<NoteEntryResponseDto> page = noteService.getNoteListWithCaseQuery(username, pageable, condition);
+        Page<NoteEntryResponseDto> page = noteService.getNoteListWithJoin(username, pageable, condition);
+
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/union-all")
+    public ResponseEntity<Page<NoteEntryResponseDto>> getNoteListPageWithUnionAll(
+            @AuthenticationPrincipal CustomUser user,
+            @PageableDefault Pageable pageable,
+            NoteCondRequestDto condition
+    ) {
+        String username = user.getUsername();
+
+        //최신순 or 날짜순 일기 조회
+        Page<NoteEntryResponseDto> page = noteService.getNoteListWithUnionAll(username, pageable, condition);
 
         return ResponseEntity.ok(page);
     }
