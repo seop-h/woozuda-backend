@@ -73,6 +73,15 @@ public class NoteController {
         return ResponseEntity.ok(page);
     }
 
+    @GetMapping("/shared/{userId}")
+    public ResponseEntity<Page<NoteEntryResponseDto>> getSharedNoteListPage(
+            @PathVariable("userId") Long userId,
+            @PageableDefault Pageable pageable
+    ) {
+        Page<NoteEntryResponseDto> page = noteService.getSharedNoteList(userId, pageable);
+        return ResponseEntity.ok(page);
+    }
+
     @GetMapping("/date")
     public ResponseEntity<DateListResponseDto> getNoteDates(
             @AuthenticationPrincipal CustomUser user

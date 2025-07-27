@@ -1,27 +1,10 @@
 package com.woozuda.backend.global.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import java.time.Duration;
-
-@Configuration
-@EnableCaching //SpringBoot 의 캐싱 설정을 활성화
+//@Configuration
+//@EnableCaching //SpringBoot 의 캐싱 설정을 활성화
 public class RedisCacheConfig {
 
+    /*
     @Bean
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
         // 1. ObjectMapper 설정
@@ -64,5 +47,6 @@ public class RedisCacheConfig {
                 .cacheDefaults(redisCacheConfiguration)
                 .build();
     }
+    */
 
 }

@@ -18,6 +18,7 @@ import com.woozuda.backend.note.repository.NoteRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -93,8 +94,9 @@ public class NoteService {
     //TODO weather, season, feeling이 영어로 출력되는 거 한글로 변경
     @Transactional(readOnly = true)
     public Page<NoteEntryResponseDto> getNoteListWithJoin(String username, Pageable pageable, NoteCondRequestDto condition) {
-        List<NoteResponseRepoDtoInterface> repoDtoList = noteRepository.searchNoteListWithJoin(username);
+        List<NoteEntryResponseDto> allContent = noteRepository.searchNoteListWithJoin(username, condition);
 
+        /*
         List<NoteEntryResponseDto> allContent = new ArrayList<>();
         for (NoteResponseRepoDtoInterface repoDto : repoDtoList) {
             if (!allContent.isEmpty()
@@ -104,6 +106,7 @@ public class NoteService {
                 allContent.add(new NoteEntryResponseDto(repoDto.getType(), NoteResponseDto.from(repoDto)));
             }
         }
+        */
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), allContent.size());
@@ -127,6 +130,24 @@ public class NoteService {
                 allContent.add(new NoteEntryResponseDto(repoDto.getType(), NoteResponseDto.from(repoDto)));
             }
         }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allContent.size());
+
+        if (start > end) {
+            return new PageImpl<>(Collections.emptyList(), pageable, allContent.size());
+        } else {
+            return new PageImpl<>(allContent.subList(start, end), pageable, allContent.size());
+        }
+    }
+
+
+    @Cacheable(
+            value = "sharedNoteList",
+            key = "#userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize"
+    )
+    public Page<NoteEntryResponseDto> getSharedNoteList(Long userId, Pageable pageable) {
+        List<NoteEntryResponseDto> allContent = noteRepository.searchSharedNoteList(userId);
 
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), allContent.size());

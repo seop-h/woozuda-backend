@@ -40,30 +40,30 @@ public class ComplicatedNoteQueryImpl implements ComplicatedNoteQuery {
     }
 
     @Override
-    public List<NoteEntryResponseDto> searchNoteListWithCaseQuery(String username, NoteCondRequestDto condition) {
+    public List<NoteEntryResponseDto> searchNoteListWithJoin(String username, NoteCondRequestDto condition) {
         QDiary diarySub = new QDiary("diarySub");
         QUserEntity userSub = new QUserEntity("userSub");
 
         return query
                 .from(diary)
-                    .leftJoin(note).on(diary.id.eq(note.diary.id))
-                    .leftJoin(commonNote).on(note.id.eq(commonNote.id))
-                    .leftJoin(questionNote).on(note.id.eq(questionNote.id))
-                    .leftJoin(retrospectiveNote).on(note.id.eq(retrospectiveNote.id))
-                    .leftJoin(question).on(question.id.eq(questionNote.question.id))
-                    .leftJoin(noteContent).on(note.id.eq(noteContent.note.id))
+                .leftJoin(note).on(diary.id.eq(note.diary.id))
+                .leftJoin(commonNote).on(note.id.eq(commonNote.id))
+                .leftJoin(questionNote).on(note.id.eq(questionNote.id))
+                .leftJoin(retrospectiveNote).on(note.id.eq(retrospectiveNote.id))
+                .leftJoin(question).on(question.id.eq(questionNote.question.id))
+                .leftJoin(noteContent).on(note.id.eq(noteContent.note.id))
                 .where(dateEq(condition.getDate()),
                         note.diary.id.in(JPAExpressions
-                        .select(diarySub.id)
-                        .from(diarySub)
-                            .join(userSub).on(diarySub.user.id.eq(userSub.id))
-                        .where(userSub.username.eq(username))
-                ))
+                                .select(diarySub.id)
+                                .from(diarySub)
+                                .join(userSub).on(diarySub.user.id.eq(userSub.id))
+                                .where(userSub.username.eq(username))
+                        ))
                 .orderBy(note.date.desc(),
                         Expressions.numberTemplate(
-                            Integer.class,
-                            "FIELD({0}, 'COMMON','QUESTION','RETROSPECTIVE')",
-                            note.dtype
+                                Integer.class,
+                                "FIELD({0}, 'COMMON','QUESTION','RETROSPECTIVE')",
+                                note.dtype
                         ).asc(),
                         note.id.asc(),
                         noteContent.noteOrder.asc())
@@ -95,6 +95,66 @@ public class ComplicatedNoteQueryImpl implements ComplicatedNoteQuery {
                                                 new CaseBuilder()
                                                         .when(note.dtype.eq(RETROSPECTIVE)).then(retrospectiveNote.type.stringValue())
                                                         .otherwise((String) null),
+                                                list(
+                                                        noteContent.content
+                                                )
+                                        )
+                                )
+                        )
+                );
+    }
+
+    @Override
+    public List<NoteEntryResponseDto> searchSharedNoteList(Long userId) {
+        QDiary diarySub = new QDiary("diarySub");
+        QUserEntity userSub = new QUserEntity("userSub");
+
+        return query
+                .from(diary)
+                .leftJoin(note).on(diary.id.eq(note.diary.id))
+                .leftJoin(commonNote).on(note.id.eq(commonNote.id))
+                .leftJoin(questionNote).on(note.id.eq(questionNote.id))
+                .leftJoin(retrospectiveNote).on(note.id.eq(retrospectiveNote.id))
+                .leftJoin(question).on(question.id.eq(questionNote.question.id))
+                .leftJoin(noteContent).on(note.id.eq(noteContent.note.id))
+                .where(note.diary.id.in(JPAExpressions
+                        .select(diarySub.id)
+                        .from(diarySub)
+                        .join(userSub).on(diarySub.user.id.eq(userSub.id))
+                        .where(userSub.id.eq(userId))
+                ))
+                .orderBy(note.date.desc(),
+                        Expressions.numberTemplate(
+                                Integer.class,
+                                "FIELD({0}, 'COMMON','QUESTION','RETROSPECTIVE')",
+                                note.dtype
+                        ).asc(),
+                        note.id.asc(),
+                        noteContent.noteOrder.asc())
+                .transform(
+                        groupBy(note.id).list(
+                                new QNoteEntryResponseDto(
+                                        note.dtype,
+                                        new QNoteResponseDto(
+                                                note.id,
+                                                diary.id,
+                                                diary.title,
+                                                note.title,
+                                                note.date.stringValue(),
+                                                new CaseBuilder()
+                                                        .when(note.dtype.eq(COMMON)).then(commonNote.weather.stringValue())
+                                                        .when(note.dtype.eq(QUESTION)).then(questionNote.weather.stringValue())
+                                                        .otherwise((String) null),
+                                                new CaseBuilder()
+                                                        .when(note.dtype.eq(COMMON)).then(commonNote.season.stringValue())
+                                                        .when(note.dtype.eq(QUESTION)).then(questionNote.season.stringValue())
+                                                        .otherwise((String) null),
+                                                new CaseBuilder()
+                                                        .when(note.dtype.eq(COMMON)).then(commonNote.feeling.stringValue())
+                                                        .when(note.dtype.eq(QUESTION)).then(questionNote.feeling.stringValue())
+                                                        .otherwise((String) null),
+                                                questionNote.question.content,
+                                                retrospectiveNote.type.stringValue(),
                                                 list(
                                                         noteContent.content
                                                 )

@@ -132,7 +132,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join", "/error", "/account/sample/alluser", "/favicon.ico", "/api/shortlink/note/**", "/api/shortlink/ai/**", "/actuator/**", "/health", "/api/diary/no-auth/**").permitAll()
+                        .requestMatchers("/login", "/", "/join", "/error", "/account/sample/alluser", "/favicon.ico", "/api/shortlink/note/**", "/api/shortlink/ai/**", "/actuator/**", "/health", "/api/diary/no-auth/**", "/api/note/shared/**").permitAll()
                         .anyRequest().authenticated());
 
         //UserNamePasswordAuthenticationFilter 자리에 커스텀 하게 만든 LoginFilter를 실행한다.

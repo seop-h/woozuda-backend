@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface ComplicatedNoteQuery {
 
-    List<NoteEntryResponseDto> searchNoteListWithCaseQuery(String username, NoteCondRequestDto condition);
+    List<NoteEntryResponseDto> searchNoteListWithJoin(String username, NoteCondRequestDto condition);
 
+    List<NoteEntryResponseDto> searchSharedNoteList(Long userId);
 }

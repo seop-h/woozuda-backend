@@ -26,7 +26,8 @@ public interface NoteRepository extends JpaRepository<Note, Long>, CustomNoteRep
     @EntityGraph(attributePaths = {"diary", "diary.user", "noteContents"})
     Optional<Note> findWithRelatedById(Long noteId);
 
-    @Query(value = """            
+    /*
+    @Query(value = """
             select n.note_id        as noteId,
                    n.dtype          as type,
                    d.diary_id       as diaryId,
@@ -84,6 +85,7 @@ public interface NoteRepository extends JpaRepository<Note, Long>, CustomNoteRep
             """,
             nativeQuery = true)
     List<NoteResponseRepoDtoInterface> searchNoteListWithJoin(@Param("username") String username);
+    */
 
     @Query(value = """
             (select d.diary_id    as diaryId,
